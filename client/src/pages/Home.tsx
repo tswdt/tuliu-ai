@@ -5,12 +5,14 @@ import { motion } from "framer-motion";
 import { ChevronRight, Zap } from "lucide-react";
 import { useState } from "react";
 import BeforeAfterSlider from "@/components/BeforeAfterSlider";
+import { useLocation } from "wouter";
 
 /**
  * 赛博朋克风格的 AI 电商图片生成平台首页
  */
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
+  const [, navigate] = useLocation();
   const [activeCase, setActiveCase] = useState(0);
 
   const caseStudies = [
@@ -99,7 +101,10 @@ export default function Home() {
             transition={{ duration: 0.5 }}
           >
             {isAuthenticated ? (
-              <Button className="btn-neon text-sm">
+              <Button
+                onClick={() => navigate('/dashboard')}
+                className="btn-neon text-sm"
+              >
                 Dashboard
               </Button>
             ) : (
