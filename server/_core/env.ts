@@ -7,4 +7,10 @@ export const ENV = {
   isProduction: process.env.NODE_ENV === "production",
   forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
+  siliconflowApiKey: process.env.SILICONFLOW_API_KEY ?? "",
+  siliconflowBaseUrl: process.env.SILICONFLOW_BASE_URL ?? "https://api.siliconflow.cn/v1",
+  emailUser: process.env.EMAIL_USER ?? "",
+  emailPass: process.env.EMAIL_PASS ?? "",
+  emailHost: process.env.EMAIL_HOST ?? "",
+  emailPort: parseInt(process.env.EMAIL_PORT ?? "465", 10),
 };
