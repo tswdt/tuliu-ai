@@ -61,8 +61,8 @@ export default function Login() {
     try {
       const result = await verifyOtpMutation.mutateAsync({ email, otp });
       toast.success(result.message);
-      // 重定向到 dashboard
-      setTimeout(() => navigate('/dashboard'), 1000);
+      // 立即重定向到 dashboard，避免用户等待
+      window.location.href = '/dashboard';
     } catch (error) {
       toast.error('验证失败，请检查验证码');
     } finally {

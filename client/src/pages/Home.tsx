@@ -137,10 +137,10 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="text-center"
           >
-            <h1 className="text-6xl md:text-8xl font-extrabold mb-8 tracking-tight neon-glow">
+            <h1 className="text-7xl md:text-9xl font-black mb-8 tracking-tighter neon-glow leading-none">
               Picset AI: 你的 AI 电商视觉专家
             </h1>
-            <p className="text-2xl md:text-3xl text-foreground/90 mb-10 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-2xl md:text-4xl font-medium text-foreground/80 mb-12 max-w-5xl mx-auto leading-tight">
               让小团队也有大牌设计力。从产品图到完美详情页，只需几分钟。支持智能组图生成和风格复刻，让您的商品脱颖而出。
             </p>
 

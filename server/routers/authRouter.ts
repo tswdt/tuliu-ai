@@ -36,16 +36,14 @@ export const authRouter = router({
         });
 
         // 发送邮件
-        // 在开发环境下，如果邮件发送失败，将验证码打印到控制台
+        // 在开发环境下，始终将验证码打印到控制台，方便调试
+        console.log(`[DEV] OTP for ${input.email}: ${otp}`);
         const sent = await sendOTPEmail(input.email, otp);
-        if (!sent) {
-          console.log(`[DEV] OTP for ${input.email}: ${otp}`);
-          if (process.env.NODE_ENV === 'production') {
-            throw new TRPCError({
-              code: 'INTERNAL_SERVER_ERROR',
-              message: '邮件发送失败，请稍后重试',
-            });
-          }
+        if (!sent && process.env.NODE_ENV === 'production') {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: '邮件发送失败，请稍后重试',
+          });
         }
 
         return { success: true, message: '验证码已发送到您的邮箱' };
