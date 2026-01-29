@@ -55,18 +55,17 @@ export async function generateImage(
   height: number = 1024
 ): Promise<string> {
   try {
-    const response = await fetch(`${SILICONFLOW_API_URL}/text_to_image`, {
+    const response = await fetch(`${SILICONFLOW_API_URL}/images/generations`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'black-forest-labs/FLUX.1-pro',
+        model: 'black-forest-labs/FLUX.1-schnell',
         prompt: prompt,
         image_size: `${width}x${height}`,
         num_inference_steps: 20,
-        guidance_scale: 7.5,
       }),
     });
 

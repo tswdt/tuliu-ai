@@ -2,10 +2,12 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import multer from "multer";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
+import { cosUpload } from "../cosStorage";
 import { serveStatic, setupVite } from "./vite";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -35,6 +37,22 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+  
+  // File upload endpoint
+  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
+  app.post("/api/storage/upload", upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "没有上传文件" });
+      }
+      const fileName = `uploads/${Date.now()}-${req.file.originalname}`;
+      const result = await cosUpload(fileName, req.file.buffer, req.file.mimetype);
+      res.json({ url: result.url, key: result.key });
+    } catch (error) {
+      console.error("[Upload] Failed to upload file:", error);
+      res.status(500).json({ error: "上传失败" });
+    }
+  });
   // tRPC API
   app.use(
     "/api/trpc",

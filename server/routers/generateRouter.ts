@@ -73,7 +73,7 @@ export const generateRouter = router({
           .insert(generatedImages)
           .values(insertData);
 
-        const imageId = (result as any)[0];
+        const imageId = (result as any)[0].insertId;
 
         try {
           // 翻译 Prompt

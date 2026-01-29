@@ -13,4 +13,8 @@ export const ENV = {
   emailPass: process.env.EMAIL_PASS ?? "",
   emailHost: process.env.EMAIL_HOST ?? "",
   emailPort: parseInt(process.env.EMAIL_PORT ?? "465", 10),
+  cosSecretId: process.env.COS_SECRET_ID ?? "",
+  cosSecretKey: process.env.COS_SECRET_KEY ?? "",
+  cosBucket: process.env.COS_BUCKET ?? "",
+  cosRegion: process.env.COS_REGION ?? "",
 };
