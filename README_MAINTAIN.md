@@ -4,88 +4,54 @@
 
 ## 1. 核心 Mission 与视觉契约
 *   **视觉风格**: 完美复刻 Picset AI (深色模式、霓虹光效、玻璃拟态)。
-*   **核心功能**: 电商 AI 生图 SaaS，包含“中文 Prompt 翻译 -> 生图 -> 自动水印 -> 积分扣费”全链路。
-*   **首页规范**: 必须包含 **Case Gallery**，展示“原图 vs AI 生成”的对比滑块 (Before/After Slider)。
+*   **核心功能**: 电商 AI 生图 SaaS，包含“产品图上传 -> 视觉推理 -> 结构化 Prompt -> AI 生图 -> 自动水印 -> 积分扣费”全链路。
+*   **首页规范**: 必须包含 **Case Gallery**，展示“原图 vs AI 生成”的对比滑块 (Before/After Slider)。标题需具备极强的视觉冲击力（font-black, text-9xl）。
 
-## 2. 技术栈边界 (禁止擅自更改)
+## 2. 技术栈与基础设施 (Infrastructure)
 | 维度 | 强制标准 | 备注 |
 | :--- | :--- | :--- |
-| **前端框架** | React + Vite + Wouter | 轻量化，严禁引入 Next.js (除非重构要求) |
+| **前端框架** | React + Vite + Wouter | 轻量化，严禁引入 Next.js |
 | **通讯协议** | tRPC (Type-safe API) | 所有前后端交互必须通过 `server/routers/` |
 | **数据库** | Drizzle ORM + MySQL/TiDB | 修改 Schema 必须通过 `drizzle/schema.ts` |
+| **服务器** | 腾讯云 6M 带宽服务器 | 确保大图传输不卡顿 |
+| **对象存储** | 腾讯云 COS | 用于存储用户上传的原图及生成的电商图 |
 | **UI 组件库** | Shadcn UI + Tailwind CSS | 保持 `components/ui/` 的原子化 |
-| **核心库** | Sharp (水印), Nodemailer (邮件) | 严禁引入同类竞争库 |
 
-## 3. 环境变量与多模型策略 (Environment)
-项目依赖以下环境变量，接管后请立即检查 `.env`:
-*   **SiliconFlow**: `SILICONFLOW_API_KEY` (支持 Flux.1, Qwen 翻译, Upscaler)。
-*   **邮件服务**: `EMAIL_USER`, `EMAIL_PASS`, `EMAIL_HOST` (用于 OTP 验证)。
-*   **多模型逻辑**:
-    *   **翻译**: 调用 SiliconFlow (Qwen) 将中文转为英文 Prompt。
-    *   **生图**: 调用 SiliconFlow (Flux-pro/dev)。
-    *   **视觉推理**: 接入混元-t1-vision (用于复杂场景理解)。
+## 3. 多模型策略 (Multi-Model Strategy)
+项目采用分层模型架构，以平衡速度、成本与质量：
+*   **视觉推理层**: 接入 **混元-t1-vision**。用于识别用户上传的产品图特征（材质、光影、结构）。
+*   **提示词工程层**: 
+    *   **混元-turbos (快思考模型)**: 用于快速生成基础 Prompt。
+    *   **结构化提示词 (Structured Prompting)**: 强制包含 `resolution, product photography, soft studio lighting` 等专业摄影参数。
+*   **生图引擎层**: 
+    *   **SiliconFlow (Flux.1) API**: 核心生图引擎，支持高质量电商视觉输出。
+    *   **ControlNet (Canny/Depth)**: 确保产品形状在生成过程中不走样。
+*   **后处理层**:
+    *   **briaai/RMBG-1.4 API**: 自动去除原图背景。
+    *   **AI 超分放大 (AI Upscaling)**: 接入 SiliconFlow Upscaler 或 Real-ESRGAN，提升详情页清晰度。
+*   **3D 扩展**: 预留 **混元 3D 大模型** 接口，用于未来的产品建模需求。
 
-## 4. 六层商业架构执行准则
-1.  **Client**: 首页必须体现“高质量电商案例”。Dashboard 需提供“一键尝试案例”入口。
-2.  **Gateway**: 严格执行 **邮箱验证码 (OTP)** 登录。禁止绕过验证直接操作数据库。
-3.  **Strategy**: 后端翻译引擎必须带有 System Prompt 优化，确保生成的英文 Prompt 符合 Flux.1 偏好。
-4.  **Execution**: 
-    *   **Trial 版**: 强制 720p + "Tuliu Preview" 水印。
-    *   **Paid 版**: 原图返回。
-5.  **Commerce (积分系统)**:
-    *   `Standard (1pt)`, `HD (2pts)`, `Ultra (4pts)`。
-    *   扣费操作必须包裹在数据库事务中。
-6.  **Admin**: `/admin` 路由用于用户管理、手动充值与 GMV 监控。
+## 4. 核心业务逻辑 (Business Logic)
+1.  **Prompt 模板工厂**: 提供 `Quiet Luxury` 等预设模板，用户一键应用高级视觉风格。
+2.  **生成模式**:
+    *   **标准生成 (Standard Generation)**: 1 积分/张。
+    *   **批量生成**: 支持 1-20 张连发，预留用户选择权。
+3.  **安全与频率控制**: 后端必须限制接口调用频率 (**Rate Limit**)，防止 API 被恶意刷取。
+4.  **图层管理**: 基于 **SVG/Canvas 的图层分离技术**，确保水印与产品图分离，方便 Paid 版用户获取原图。
 
-## 5. 开发者避坑指南 (减少积分消耗)
-*   **Invalid URL 修复**: `client/src/const.ts` 已包含环境变量容错逻辑，修改时请勿移除 `try-catch`。
-*   **Drizzle 流程**: 修改 `schema.ts` 后，必须运行 `pnpm drizzle-kit generate`。
-*   **API 路径**: 后端入口在 `server/_core/index.ts`，路由分发在 `server/routers/`。
+## 5. 环境变量配置 (Environment Variables)
+在 `.env` 文件中必须配置以下核心变量：
+*   `SILICONFLOW_API_KEY`: 用于 Flux.1 和 Upscaler。
+*   `HUNYUAN_API_KEY`: 用于混元系列模型（Vision/Turbos/3D）。
+*   `TENCENT_COS_SECRET_ID/KEY`: 腾讯云存储配置。
+*   `SMTP_HOST/USER/PASS`: 邮件 OTP 验证配置。
+*   `JWT_SECRET`: Session 加密密钥。
+
+## 6. 开发者避坑指南
+*   **登录调试**: 开发模式下，OTP 验证码会强制打印在控制台 `[DEV] OTP: XXXXXX`。
+*   **数据库同步**: 修改 `schema.ts` 后，必须运行 `pnpm drizzle-kit push`。
+*   **字体规范**: 首页标题必须使用 `font-black` 字重，并配合 `tracking-tighter` 和 `leading-none`。
 
 ---
 **维护记录**:
-- 2026-01-29: 初始化接管，修复环境变量报错，重构认证逻辑为 Email OTP，建立本手册。 (By Manus AI)
-
-## 6. 核心要素与跨平台迁移指南
-
-为了确保项目能够顺利在不同账号或平台间迁移，请务必关注以下核心要素：
-
-### 关键环境变量配置
-在任何新环境下，必须在 `.env` 文件中配置以下变量：
-- `DATABASE_URL`: MySQL 数据库连接字符串。
-- `JWT_SECRET`: 用于生成登录 Session 的密钥。
-- `OAUTH_SERVER_URL`: (可选) 对接外部 OAuth 服务。
-- `SMTP_HOST/USER/PASS`: 用于发送真实验证码邮件。
-
-### 数据库迁移
-项目使用 Drizzle ORM。在新环境部署时：
-1. 确保 MySQL 数据库已创建。
-2. 运行 `pnpm drizzle-kit push` 同步表结构。
-
-### 登录系统调试 (开发模式)
-- 在开发环境下，系统会自动在控制台打印 `[DEV] OTP for user@example.com: XXXXXX`。
-- 即使邮件发送失败，也可以通过控制台获取验证码完成登录测试。
-
-### 图片生成与上传功能
-- **AI 生图**: 对接了 AI 翻译和生图接口。
-- **产品图上传**: 支持用户上传原图，后台预留了对接大模型处理电商详情页的接口。
-- **批量生成**: 用户可选择生成 1-20 张图片，系统会自动循环处理。
-
-### 视觉规范
-- **字体**: 标题使用 `font-extrabold`，Hero 区域字体大小设为 `text-6xl` 到 `text-8xl`。
-- **风格**: 赛博朋克霓虹风格，使用 `neon-glow` 和 `glass-effect` 类名。
-
-## 7. 本地开发与预览 (Local Development & Previewing)
-
-为了在本地环境运行、测试和预览 Tuliu AI 项目，请遵循以下步骤。
-
-| 步骤 | 命令 / 操作 | 详细说明 |
-| :--- | :--- | :--- |
-| 1. **安装依赖** | `pnpm install` | 安装所有必需的前端和后端依赖项。 |
-| 2. **配置环境** | 创建 `.env` 文件 | 填入数据库、API 密钥和邮件服务等环境变量。 |
-| 3. **启动数据库** | `sudo systemctl start mysql` | 确保本地 MySQL 服务正在运行。 |
-| 4. **数据库迁移** | `pnpm drizzle-kit push` | 同步表结构到本地数据库。 |
-| 5. **启动开发服务器** | `pnpm dev` | 同时启动 Vite 前端和后端 tRPC 服务。 |
-| 6. **访问预览** | `http://localhost:3000` | 打开浏览器访问预览地址。 |
-
-> **重要提示**: 预览确认无误后，再提交代码或同步到仓库。
+- 2026-01-29: 整合多模型策略（混元、SiliconFlow）、腾讯云基础设施及结构化提示词工程。 (By Manus AI)
