@@ -101,20 +101,29 @@ export default function Home() {
             transition={{ duration: 0.5 }}
           >
             {isAuthenticated ? (
-              <Button
-                onClick={() => navigate('/dashboard')}
-                className="btn-neon text-sm"
-              >
-                Dashboard
-              </Button>
-            ) : (
-              <Button
-                onClick={() => window.location.href = '/login'}
-                className="btn-neon text-sm"
-              >
-                Login
-              </Button>
-            )}
+	              <Button
+	                onClick={() => navigate('/dashboard')}
+	                className="btn-neon text-sm"
+	              >
+	                Dashboard
+	              </Button>
+	            ) : (
+	              <div className="flex items-center gap-2">
+	                <Button
+	                  variant="ghost"
+	                  onClick={() => window.location.href = '/login'}
+	                  className="text-sm hover:text-neon-pink transition-colors"
+	                >
+	                  登录
+	                </Button>
+	                <Button
+	                  onClick={() => window.location.href = '/login'}
+	                  className="btn-neon text-sm"
+	                >
+	                  立即注册
+	                </Button>
+	              </div>
+	            )}
           </motion.div>
         </div>
       </nav>
@@ -128,11 +137,11 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="text-center"
           >
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 neon-glow">
-              AI 电商图片生成
+            <h1 className="text-6xl md:text-8xl font-extrabold mb-8 tracking-tight neon-glow">
+              Picset AI: 你的 AI 电商视觉专家
             </h1>
-            <p className="text-xl md:text-2xl text-foreground/80 mb-8 max-w-3xl mx-auto">
-              使用 AI 技术秒速生成高质量电商产品图，提升转化率
+            <p className="text-2xl md:text-3xl text-foreground/90 mb-10 max-w-4xl mx-auto leading-relaxed">
+              让小团队也有大牌设计力。从产品图到完美详情页，只需几分钟。支持智能组图生成和风格复刻，让您的商品脱颖而出。
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -142,9 +151,9 @@ export default function Home() {
               >
                 <Button
                   onClick={() => window.location.href = '/login'}
-                  className="btn-neon px-8 py-3 text-lg"
+                  className="btn-neon px-10 py-4 text-xl font-bold"
                 >
-                  立即免费试用 <ChevronRight className="ml-2 w-5 h-5" />
+                  免费试用 <ChevronRight className="ml-2 w-6 h-6" />
                 </Button>
               </motion.div>
               <motion.div

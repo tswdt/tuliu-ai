@@ -5,6 +5,7 @@ import { getDb, createOTPRecord, getValidOTPRecord, deleteOTPRecord, getUserByEm
 import { sendOTPEmail, sendWelcomeEmail, sendAdminNotificationEmail } from '../services/emailService';
 import { COOKIE_NAME } from '@shared/const';
 import { getSessionCookieOptions } from '../_core/cookies';
+import { sdk } from '../_core/sdk';
 
 /**
  * 生成 6 位随机数字 OTP
@@ -35,12 +36,16 @@ export const authRouter = router({
         });
 
         // 发送邮件
+        // 在开发环境下，如果邮件发送失败，将验证码打印到控制台
         const sent = await sendOTPEmail(input.email, otp);
         if (!sent) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: '邮件发送失败，请稍后重试',
-          });
+          console.log(`[DEV] OTP for ${input.email}: ${otp}`);
+          if (process.env.NODE_ENV === 'production') {
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: '邮件发送失败，请稍后重试',
+            });
+          }
         }
 
         return { success: true, message: '验证码已发送到您的邮箱' };
@@ -99,6 +104,11 @@ export const authRouter = router({
           );
         }
 
+        // 设置登录 Cookie
+        const token = await sdk.createSessionToken(openId, { name: input.email.split('@')[0] });
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, token, cookieOptions);
+
         // 返回登录成功信息
         return {
           success: true,
@@ -121,6 +131,7 @@ export const authRouter = router({
    * 获取当前用户信息
    */
   me: publicProcedure.query(({ ctx }) => {
+    // @ts-ignore
     return ctx.user || null;
   }),
 

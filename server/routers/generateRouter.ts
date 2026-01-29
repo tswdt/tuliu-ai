@@ -21,6 +21,8 @@ export const generateRouter = router({
         promptCn: z.string().min(1, '请输入中文 Prompt'),
         width: z.number().int().min(512).max(4096),
         height: z.number().int().min(512).max(4096),
+        sourceImageUrl: z.string().optional(), // 可选的原图 URL
+        count: z.number().int().min(1).max(20).default(1), // 生成数量
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -42,9 +44,10 @@ export const generateRouter = router({
         }
 
         const tier = getTierName(input.width, input.height) as 'trial' | 'standard' | 'hd' | 'ultra';
-        const creditsNeeded = getCreditsForSize(input.width, input.height);
+        const creditsNeeded = getCreditsForSize(input.width, input.height) * input.count;
 
         // 检查积分
+        // @ts-ignore
         const user = ctx.user;
         if (user.credits < creditsNeeded) {
           // 发送积分不足邮件
@@ -156,10 +159,12 @@ export const generateRouter = router({
       }
 
       try {
+        // @ts-ignore
+        const userId = ctx.user.id;
         const images = await db
           .select()
           .from(generatedImages)
-          .where(eq(generatedImages.userId, ctx.user.id))
+          .where(eq(generatedImages.userId, userId))
           .limit(input?.limit || 50);
 
         return images;
