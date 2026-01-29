@@ -55,3 +55,101 @@
 ---
 **维护记录**:
 - 2026-01-29: 整合多模型策略（混元、SiliconFlow）、腾讯云基础设施及结构化提示词工程。 (By Manus AI)
+
+- 2026-01-29 23:00: 完成项目部署和核心功能修复 (By Manus AI)
+  - ✅ 配置所有环境变量（AI 服务、COS、邮箱、数据库）
+  - ✅ 修复 Session 创建问题（添加 VITE_APP_ID）
+  - ✅ 修复图片生成记录 ID 错误（使用 insertId）
+  - ✅ 修复 SiliconFlow API 端点（使用 /images/generations）
+  - ✅ 添加腾讯云 COS 存储支持
+  - ✅ 添加文件上传 API 路由
+  - ✅ 测试通过：邮箱登录、图片生成、图片下载
+  - ✅ 创建 .env.example 和测试结果文档
+  - ✅ 同步代码到 GitHub 仓库
+
+## 7. 已知问题和待办事项
+
+### 已修复的问题
+1. ✅ 数据库未配置 - 已安装 MySQL 并初始化数据库
+2. ✅ Session 创建失败 - 已添加 VITE_APP_ID 配置
+3. ✅ 图片生成记录 ID 错误 - 已修复为使用 insertId
+4. ✅ SiliconFlow API 端点错误 - 已更正为正确的端点
+
+### 待优化项
+1. ⚠️ 前端文件上传交互 - 后端 API 正常，前端点击事件在自动化环境中可能受限
+2. ⚠️ 水印功能 - 需要进一步测试
+3. ⚠️ 图片去背景功能 - 需要集成 Bria AI API
+4. ⚠️ 批量生成功能 - 需要优化 UI 和后端处理
+
+## 8. 部署说明
+
+### 本地开发环境
+1. 克隆仓库：`gh repo clone tswdt/tuliu-ai`
+2. 安装依赖：`pnpm install`
+3. 配置环境变量：复制 `.env.example` 为 `.env` 并填入真实配置
+4. 初始化数据库：`pnpm db:push`
+5. 启动开发服务器：`pnpm dev`
+6. 访问：http://localhost:3000
+
+### 生产环境部署
+1. 确保服务器已安装 Node.js 22+ 和 MySQL
+2. 配置环境变量（使用生产环境的 API 密钥）
+3. 构建项目：`pnpm build`
+4. 启动服务：`pnpm start`
+5. 配置反向代理（Nginx）和 SSL 证书
+
+### 测试账号
+- 邮箱：newuser@tuliu.ai
+- 初始积分：10 分
+- 测试 Prompt：红色运动鞋，白色背景
+
+## 9. API 端点说明
+
+### 认证相关
+- `POST /api/trpc/auth.sendOTP` - 发送邮箱验证码
+- `POST /api/trpc/auth.verifyOTP` - 验证邮箱验证码并登录
+- `POST /api/trpc/auth.logout` - 登出
+
+### 图片生成
+- `POST /api/trpc/generate.generate` - 生成图片
+- `GET /api/trpc/generate.history` - 获取生成历史
+
+### 文件上传
+- `POST /api/storage/upload` - 上传文件到腾讯云 COS
+
+## 10. 数据库 Schema
+
+### users 表
+- id: 用户 ID
+- email: 邮箱
+- credits: 积分余额
+- createdAt: 创建时间
+
+### otps 表
+- id: OTP ID
+- email: 邮箱
+- code: 验证码
+- expiresAt: 过期时间
+
+### generatedImages 表
+- id: 图片 ID
+- userId: 用户 ID
+- promptCn: 中文 Prompt
+- promptEn: 英文 Prompt
+- imageUrl: 原图 URL
+- watermarkedUrl: 水印图 URL
+- width: 宽度
+- height: 高度
+- tier: 等级（trial/standard/hd/ultra）
+- creditsUsed: 消耗积分
+- status: 状态（pending/success/failed）
+- createdAt: 创建时间
+
+### transactions 表
+- id: 交易 ID
+- userId: 用户 ID
+- type: 类型（generate/recharge）
+- creditsDelta: 积分变化
+- creditsAfter: 变化后积分
+- description: 描述
+- createdAt: 创建时间
