@@ -62,3 +62,4 @@ EMAIL_SECURE=true
 # --- 4. 安全配置 ---
 # 请自动生成一个随机字符串填入下方
 JWT_SECRET=""
+​“MAINTENANCE.md 仅作为上下文参考，本次任务中严禁修改该文件。”
