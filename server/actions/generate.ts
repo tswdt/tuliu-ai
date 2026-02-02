@@ -15,7 +15,7 @@ type GenerateInput = z.infer<typeof GenerateInputSchema>;
 async function hunyuanEnhancePrompt(userPrompt: string): Promise<string> {
   const HUNYUAN_API_KEY = process.env.HUNYUAN_API_KEY;
   // Assuming a placeholder URL for Hunyuan API, replace with actual if available
-  const HUNYUAN_API_URL = process.env.HUNYUAN_BASE_URL || 'https://api.hunyuan.tencent.com/v1/chat/completions'; 
+  const HUNYUAN_API_URL = 'https://api.siliconflow.cn/v1/chat/completions'; 
 
   if (!HUNYUAN_API_KEY) {
     console.warn('HUNYUAN_API_KEY is not set. Skipping Hunyuan prompt enhancement.');
@@ -30,7 +30,7 @@ async function hunyuanEnhancePrompt(userPrompt: string): Promise<string> {
         'Authorization': `Bearer ${HUNYUAN_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'hunyuan-pro', // Assuming a model name, adjust if needed
+        model: 'tencent/Hunyuan-A13B-Instruct', 
         messages: [
           { role: 'system', content: 'You are an AI assistant that refines user prompts for image generation. Enhance the given prompt to be more descriptive and suitable for high-quality image synthesis, focusing on visual details, lighting, and composition. Do not add negative prompts.' },
           { role: 'user', content: userPrompt },
@@ -95,7 +95,7 @@ export async function generateImage(input: GenerateInput) {
   const finalPrompt = await enhancePromptForImageGeneration(validatedInput);
 
   const requestBody = {
-    model: 'flux-pro/v1',
+    model: 'black-forest-labs/FLUX.1-pro',
     prompt: finalPrompt,
     image_url: validatedInput.imageUrl,
     aspect_ratio: validatedInput.aspectRatio,
@@ -119,11 +119,11 @@ export async function generateImage(input: GenerateInput) {
     }
 
     const data = await response.json();
-    // Assuming the API returns a 'url' field for the generated image
-    if (data && data.url) {
-      return { success: true, url: data.url };
+    // SiliconFlow returns an 'images' array with 'url' fields
+    if (data && data.images && data.images.length > 0 && data.images[0].url) {
+      return { success: true, url: data.images[0].url };
     } else {
-      console.error('SiliconFlow API did not return a URL:', data);
+      console.error('SiliconFlow API did not return a valid image URL:', data);
       throw new Error('Image generation successful, but no URL returned.');
     }
   } catch (error) {
