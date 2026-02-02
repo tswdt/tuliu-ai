@@ -42,7 +42,7 @@ async function hunyuanEnhancePrompt(userPrompt: string): Promise<string> {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Hunyuan API Error:', errorData);
+      console.error('Hunyuan API Error:', response.status, errorData);
       // Fallback to original prompt on API error
       return userPrompt;
     }
@@ -93,9 +93,10 @@ export async function generateImage(input: GenerateInput) {
   }
 
   const finalPrompt = await enhancePromptForImageGeneration(validatedInput);
+  console.log('Final Enhanced Prompt:', finalPrompt);
 
   const requestBody = {
-    model: 'black-forest-labs/FLUX.1-pro',
+    model: 'black-forest-labs/FLUX.1-schnell',
     prompt: finalPrompt,
     image_url: validatedInput.imageUrl,
     aspect_ratio: validatedInput.aspectRatio,
