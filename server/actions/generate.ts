@@ -11,19 +11,73 @@ const GenerateInputSchema = z.object({
 
 type GenerateInput = z.infer<typeof GenerateInputSchema>;
 
-// 2. The "Strategy Layer" Logic
-function enhancePrompt(input: GenerateInput): string {
-  let enhancedPrompt = input.prompt;
+// Hunyuan API for prompt enhancement
+async function hunyuanEnhancePrompt(userPrompt: string): Promise<string> {
+  const HUNYUAN_API_KEY = process.env.HUNYUAN_API_KEY;
+  // Assuming a placeholder URL for Hunyuan API, replace with actual if available
+  const HUNYUAN_API_URL = process.env.HUNYUAN_BASE_URL || 'https://api.hunyuan.tencent.com/v1/chat/completions'; 
 
+  if (!HUNYUAN_API_KEY) {
+    console.warn('HUNYUAN_API_KEY is not set. Skipping Hunyuan prompt enhancement.');
+    return userPrompt; // Return original prompt if API key is missing
+  }
+
+  try {
+    const response = await fetch(HUNYUAN_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${HUNYUAN_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'hunyuan-pro', // Assuming a model name, adjust if needed
+        messages: [
+          { role: 'system', content: 'You are an AI assistant that refines user prompts for image generation. Enhance the given prompt to be more descriptive and suitable for high-quality image synthesis, focusing on visual details, lighting, and composition. Do not add negative prompts.' },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 150,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Hunyuan API Error:', errorData);
+      // Fallback to original prompt on API error
+      return userPrompt;
+    }
+
+    const data = await response.json();
+    // Assuming the response structure for chat completions
+    if (data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
+      return data.choices[0].message.content.trim();
+    } else {
+      console.warn('Hunyuan API did not return a valid enhanced prompt. Using original prompt.');
+      return userPrompt;
+    }
+  } catch (error) {
+    console.error('Error during Hunyuan prompt enhancement:', error);
+    return userPrompt; // Fallback on network or other errors
+  }
+}
+
+// 2. The "Strategy Layer" Logic
+async function enhancePromptForImageGeneration(input: GenerateInput): Promise<string> {
+  let finalPrompt = input.prompt;
+
+  // First, apply Hunyuan semantic analysis if available
+  finalPrompt = await hunyuanEnhancePrompt(finalPrompt);
+
+  // Then, apply style preset enhancements
   if (input.stylePreset === 'quiet-luxury') {
-    enhancedPrompt = "High-end commercial photography, soft natural lighting, beige and warm grey tones, minimalist composition, 8k resolution, highly detailed texture. " + enhancedPrompt;
+    finalPrompt = "High-end commercial photography, soft natural lighting, beige and warm grey tones, minimalist composition, 8k resolution, highly detailed texture. " + finalPrompt;
   }
 
   // Append negative prompts
   const negativePrompt = " low quality, blurry, distorted, watermark, text, messy background.";
-  enhancedPrompt += negativePrompt;
+  finalPrompt += negativePrompt;
 
-  return enhancedPrompt;
+  return finalPrompt;
 }
 
 // 3. The "Execution Layer" (SiliconFlow Adapter)
@@ -32,22 +86,24 @@ export async function generateImage(input: GenerateInput) {
   const validatedInput = GenerateInputSchema.parse(input);
 
   const SILICONFLOW_KEY = process.env.SILICONFLOW_KEY;
+  const SILICONFLOW_BASE_URL = process.env.SILICONFLOW_BASE_URL || 'https://api.siliconflow.cn/v1';
+
   if (!SILICONFLOW_KEY) {
     throw new Error('SILICONFLOW_KEY is not set in environment variables.');
   }
 
-  const enhancedPrompt = enhancePrompt(validatedInput);
+  const finalPrompt = await enhancePromptForImageGeneration(validatedInput);
 
   const requestBody = {
     model: 'flux-pro/v1',
-    prompt: enhancedPrompt,
+    prompt: finalPrompt,
     image_url: validatedInput.imageUrl,
     aspect_ratio: validatedInput.aspectRatio,
     // Add other parameters as needed by SiliconFlow API
   };
 
   try {
-    const response = await fetch('https://api.siliconflow.cn/v1/images/generations', {
+    const response = await fetch(`${SILICONFLOW_BASE_URL}/images/generations`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
