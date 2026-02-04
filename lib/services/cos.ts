@@ -55,3 +55,33 @@ export async function getJson<T>(key: string): Promise<T | null> {
 export async function putJson(key: string, data: any): Promise<void> {
   await uploadFile(key, JSON.stringify(data, null, 2), 'application/json');
 }
+
+export async function configureBucketLifecycle(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    cos.putBucketLifecycle(
+      {
+        Bucket,
+        Region,
+        Rules: [
+          {
+            Id: 'deleteJobsAfter7Days',
+            Filter: {
+              Prefix: 'jobs/', // Apply to objects under the 'jobs/' prefix
+            },
+            Status: 'Enabled',
+            Expiration: {
+              Days: 7, // Delete objects after 7 days
+            },
+          },
+        ],
+      },
+      (err, data) => {
+        if (err) reject(err);
+        else {
+          console.log('COS Bucket lifecycle configured successfully:', data);
+          resolve();
+        }
+      }
+    );
+  });
+}

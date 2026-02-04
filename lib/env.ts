@@ -7,6 +7,7 @@ const envSchema = z.object({
   TENCENT_COS_REGION: z.string().min(1),
   SILICONFLOW_KEY: z.string().min(1),
   BRIA_API_KEY: z.string().min(1),
+  COS_LIFECYCLE_CONFIGURED: z.string().optional(), // Used to prevent repeated lifecycle configuration
 });
 
 export const env = envSchema.parse({
@@ -16,4 +17,12 @@ export const env = envSchema.parse({
   TENCENT_COS_REGION: process.env.TENCENT_COS_REGION,
   SILICONFLOW_KEY: process.env.SILICONFLOW_KEY,
   BRIA_API_KEY: process.env.BRIA_API_KEY,
+  COS_LIFECYCLE_CONFIGURED: process.env.COS_LIFECYCLE_CONFIGURED,
 });
+
+// Configure COS bucket lifecycle rules once on startup if the environment variable is set
+if (env.COS_LIFECYCLE_CONFIGURED === 'true') {
+  import("@/lib/services/cos").then(({ configureBucketLifecycle }) => {
+    configureBucketLifecycle().catch(console.error);
+  });
+}

@@ -11,6 +11,7 @@ export interface JobState {
   resultUrl?: string;
   analysis?: string;
   error?: string;
+  logs: string[];
   updatedAt: string;
 }
 
@@ -31,6 +32,7 @@ export async function updateJobState(
     updatedAt: new Date().toISOString(),
     ...current,
     ...updates,
+    logs: [...(current?.logs || []), ...(updates.logs || [])],
     updatedAt: new Date().toISOString(),
   };
   
@@ -44,6 +46,7 @@ export async function initJob(jobId: string, inputUrl: string): Promise<JobState
     status: 'pending',
     progress: 0,
     inputUrl,
+    logs: [],
     updatedAt: new Date().toISOString(),
   };
   

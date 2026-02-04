@@ -159,6 +159,15 @@ export default function Home() {
                 ></div>
               </div>
 
+                            {state.logs && state.logs.length > 0 && (
+                <div className="text-xs text-zinc-400 mt-4 pt-4 border-t border-zinc-700 space-y-1">
+                  <p className="font-medium text-zinc-300 mb-2">任务日志:</p>
+                  {state.logs.map((log, index) => (
+                    <p key={index} className="font-mono">{log}</p>
+                  ))}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4 text-xs text-zinc-500">
                 <div className={state.progress >= 20 ? "text-blue-400" : ""}>● 视觉分析</div>
                 <div className={state.progress >= 50 ? "text-blue-400" : ""}>● 智能抠图</div>
