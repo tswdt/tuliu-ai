@@ -2,10 +2,10 @@
 
 import { initJob, updateJobState, getJobState } from '@/lib/services/job';
 import { callHunyuanVision, callBriaMatting, callFluxFill, callContentModeration } from '@/lib/services/ai';
-
+import { uploadFile } from '@/lib/services/cos';
 import { validateTurnstile } from '@/lib/services/security';
 
-export async function startGeneration(jobId: string, imageUrl: string, turnstileToken?: string) {
+export async function startGeneration(jobId: string, inputImage: string, turnstileToken?: string) {
   // 0. Security Check
   if (turnstileToken) {
     const isValid = await validateTurnstile(turnstileToken);
@@ -21,10 +21,24 @@ export async function startGeneration(jobId: string, imageUrl: string, turnstile
   }
 
   // 2. Init if not exists
-    if (!state) {
-    state = await initJob(jobId, imageUrl);
-    await updateJobState(jobId, { logs: [`[${new Date().toISOString()}] 任务初始化成功`] });
+  if (!state) {
+    let finalImageUrl = inputImage;
+    
+    // If input is base64, upload to COS first
+    if (inputImage.startsWith('data:image')) {
+      const base64Data = inputImage.split(',')[1];
+      const buffer = Buffer.from(base64Data, 'base64');
+      const mimeType = inputImage.split(';')[0].split(':')[1];
+      const extension = mimeType.split('/')[1] || 'png';
+      const key = `jobs/${jobId}/input.${extension}`;
+      finalImageUrl = await uploadFile(key, buffer, mimeType);
     }
+
+    state = await initJob(jobId, finalImageUrl);
+    await updateJobState(jobId, { logs: [`[${new Date().toISOString()}] 任务初始化成功，图片已托管至 COS`] });
+  }
+
+  const imageUrl = state.inputUrl!;
 
   try {
     // 3. Vision (Hunyuan) - Skip if already analyzed
