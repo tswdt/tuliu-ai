@@ -1,14 +1,15 @@
 import COS from 'cos-nodejs-sdk-v5';
+import { env } from '@/lib/env';
 
 const cos = new COS({
-  SecretId: process.env.TENCENT_COS_SECRET_ID!,
-  SecretKey: process.env.TENCENT_COS_SECRET_KEY!,
+  SecretId: env.TENCENT_COS_SECRET_ID,
+  SecretKey: env.TENCENT_COS_SECRET_KEY,
 });
 
-const Bucket = process.env.TENCENT_COS_BUCKET!;
-const Region = process.env.TENCENT_COS_REGION!;
+const Bucket = env.TENCENT_COS_BUCKET;
+const Region = env.TENCENT_COS_REGION;
 
-export async function uploadFile(key: string, body: Buffer | string): Promise<string> {
+export async function uploadFile(key: string, body: Buffer | string, contentType?: string): Promise<string> {
   return new Promise((resolve, reject) => {
     cos.putObject(
       {
@@ -16,6 +17,7 @@ export async function uploadFile(key: string, body: Buffer | string): Promise<st
         Region,
         Key: key,
         Body: body,
+        ContentType: contentType || (key.endsWith('.json') ? 'application/json' : 'image/png'),
       },
       (err, data) => {
         if (err) reject(err);
@@ -51,5 +53,5 @@ export async function getJson<T>(key: string): Promise<T | null> {
 }
 
 export async function putJson(key: string, data: any): Promise<void> {
-  await uploadFile(key, JSON.stringify(data, null, 2));
+  await uploadFile(key, JSON.stringify(data, null, 2), 'application/json');
 }
