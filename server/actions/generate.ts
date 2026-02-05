@@ -1,15 +1,16 @@
 'use server';
 
 import { initJob, updateJobState, getJobState } from '@/lib/services/job';
-import { callHunyuanVision, callBriaMatting, callFluxFill, callContentModeration } from '@/lib/services/ai';
+import { callHunyuanVision, callBriaMatting, callFluxFill } from '@/lib/services/ai';
 import { uploadFile } from '@/lib/services/cos';
 import { validateTurnstile } from '@/lib/services/security';
+import { validateText, validateImage } from '@/lib/services/safety';
+import { deductCredit } from '@/lib/services/wallet';
 
-export async function startGeneration(jobId: string, inputImage: string, turnstileToken?: string) {
-  // 0. Security Check
+export async function startGeneration(jobId: string, inputImage: string, userId: string, turnstileToken?: string) {
+  // 0. Security Check (Turnstile)
   if (turnstileToken) {
     const isValid = await validateTurnstile(turnstileToken);
-    await updateJobState(jobId, { logs: [`[${new Date().toISOString()}] 安全验证完成: ${isValid ? '成功' : '失败'}`] });
     if (!isValid) throw new Error('Security validation failed');
   }
 
@@ -35,36 +36,45 @@ export async function startGeneration(jobId: string, inputImage: string, turnsti
     }
 
     state = await initJob(jobId, finalImageUrl);
-    await updateJobState(jobId, { logs: [`[${new Date().toISOString()}] 任务初始化成功，图片已托管至 COS`] });
   }
 
   const imageUrl = state.inputUrl!;
 
   try {
-    // 3. Vision (Hunyuan) - Skip if already analyzed
-    if (state.status === 'pending' || !state.analysis) {
-      await updateJobState(jobId, { status: 'analyzing', progress: 20, logs: [`[${new Date().toISOString()}] 开始视觉分析 (Hunyuan Vision)`] });
-      const analysis = await callHunyuanVision(imageUrl);
-      state = await updateJobState(jobId, { analysis, progress: 40, logs: [`[${new Date().toISOString()}] 视觉分析完成`] });
+    // 3. Real Content Safety & Wallet Check
+    if (state.status === 'pending') {
+      await updateJobState(jobId, { status: 'analyzing', progress: 10, logs: [`[${new Date().toISOString()}] 开始内容安全校验与扣费`] });
 
-      // 3.5. Content Moderation
-      await updateJobState(jobId, { logs: [`[${new Date().toISOString()}] 开始内容审核`] });
-      const isSafe = await callContentModeration(analysis);
-      if (!isSafe) {
-        throw new Error('内容审核失败：检测到违禁内容');
-      }
-      await updateJobState(jobId, { logs: [`[${new Date().toISOString()}] 内容审核通过`] });
+      // 3.1 Image Safety Check
+      const isImageSafe = await validateImage(imageUrl);
+      if (!isImageSafe) throw new Error('图片内容审核未通过');
+
+      // 3.2 Wallet Deduction (1 credit per generation)
+      await deductCredit(userId, 1);
+      await updateJobState(jobId, { logs: [`[${new Date().toISOString()}] 扣费成功，开始处理任务`] });
     }
 
-    // 4. Matting (Bria) - Skip if already matted
-    if (state.status === 'analyzing' || !state.maskUrl) {
+    // 4. Vision (Hunyuan) - Skip if already analyzed
+    if (state.status === 'pending' || state.status === 'analyzing' || !state.analysis) {
+      await updateJobState(jobId, { status: 'analyzing', progress: 20, logs: [`[${new Date().toISOString()}] 开始视觉分析 (Hunyuan Vision)`] });
+      const analysis = await callHunyuanVision(imageUrl);
+      
+      // 4.1 Text Safety Check for AI Analysis
+      const isTextSafe = await validateText(analysis);
+      if (!isTextSafe) throw new Error('生成内容描述审核未通过');
+
+      state = await updateJobState(jobId, { analysis, progress: 40, logs: [`[${new Date().toISOString()}] 视觉分析完成`] });
+    }
+
+    // 5. Matting (Bria) - Skip if already matted
+    if (state.status === 'analyzing' || state.status === 'matting' || !state.maskUrl) {
       await updateJobState(jobId, { status: 'matting', progress: 50, logs: [`[${new Date().toISOString()}] 开始智能抠图 (Bria Matting)`] });
       const maskUrl = await callBriaMatting(imageUrl, jobId);
       state = await updateJobState(jobId, { maskUrl, progress: 70, logs: [`[${new Date().toISOString()}] 智能抠图完成`] });
     }
 
-    // 5. Generation (Flux Fill) - Skip if already generating
-    if (state.status === 'matting' || !state.resultUrl) {
+    // 6. Generation (Flux Fill) - Skip if already generating
+    if (state.status === 'matting' || state.status === 'generating' || !state.resultUrl) {
       await updateJobState(jobId, { status: 'generating', progress: 80, logs: [`[${new Date().toISOString()}] 开始场景重绘 (Flux Fill)`] });
       const resultUrl = await callFluxFill(imageUrl, state.maskUrl!, state.analysis!, jobId);
       state = await updateJobState(jobId, { 

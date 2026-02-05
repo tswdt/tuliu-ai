@@ -8,6 +8,9 @@ const envSchema = z.object({
   SILICONFLOW_KEY: z.string().min(1),
   BRIA_API_KEY: z.string().min(1),
   COS_LIFECYCLE_CONFIGURED: z.string().optional(), // Used to prevent repeated lifecycle configuration
+  TENCENT_CLOUD_SECRET_ID: z.string().optional(),
+  TENCENT_CLOUD_SECRET_KEY: z.string().optional(),
+  TENCENT_CLOUD_REGION: z.string().optional().default('ap-guangzhou'),
 });
 
 export const env = envSchema.parse({
@@ -18,6 +21,9 @@ export const env = envSchema.parse({
   SILICONFLOW_KEY: process.env.SILICONFLOW_KEY,
   BRIA_API_KEY: process.env.BRIA_API_KEY,
   COS_LIFECYCLE_CONFIGURED: process.env.COS_LIFECYCLE_CONFIGURED,
+  TENCENT_CLOUD_SECRET_ID: process.env.TENCENT_CLOUD_SECRET_ID || process.env.TENCENT_COS_SECRET_ID,
+  TENCENT_CLOUD_SECRET_KEY: process.env.TENCENT_CLOUD_SECRET_KEY || process.env.TENCENT_COS_SECRET_KEY,
+  TENCENT_CLOUD_REGION: process.env.TENCENT_CLOUD_REGION,
 });
 
 // Configure COS bucket lifecycle rules once on startup if the environment variable is set

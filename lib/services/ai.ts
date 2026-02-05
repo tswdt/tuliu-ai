@@ -54,15 +54,6 @@ export async function callBriaMatting(imageUrl: string, jobId: string): Promise<
   });
 }
 
-export async function callContentModeration(text: string): Promise<boolean> {
-  // Placeholder for actual content moderation API call
-  // In a real scenario, this would call a service like Tencent Cloud CMS, AWS Rekognition, or a dedicated moderation API
-  console.log(`[Moderation] Checking content: ${text}`);
-  // Simulate moderation result
-  const isSafe = !text.includes("违禁词"); // Example: check for a forbidden keyword
-  return Promise.resolve(isSafe);
-}
-
 export async function callFluxFill(imageUrl: string, maskUrl: string, prompt: string, jobId: string): Promise<string> {
   return withRetry(async () => {
     return withTimeout(async () => {

@@ -42,7 +42,9 @@ export default function Home() {
       // For simplicity in this fix, we'll assume the server action can handle the initial upload
       // but we'll change the logic to ensure we're passing a URL in the long run.
       // Actually, the best way is to have a dedicated upload action.
-      await startGeneration(id, uploadedImage);
+      // For now, we use a mock userId (e.g., from local storage or a random string)
+      const userId = 'anonymous_user_1'; 
+      await startGeneration(id, uploadedImage, userId);
     } catch (err) {
       toast.error("启动任务失败");
       setLoading(false);
