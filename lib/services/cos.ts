@@ -27,7 +27,7 @@ export async function uploadFile(key: string, body: Buffer | string, contentType
   });
 }
 
-export async function getJson<T>(key: string): Promise<T | null> {
+export async function getJson<T>(key: string): Promise<{ data: T | null; etag?: string }> {
   return new Promise((resolve, reject) => {
     cos.getObject(
       {
@@ -37,12 +37,15 @@ export async function getJson<T>(key: string): Promise<T | null> {
       },
       (err, data) => {
         if (err) {
-          if (err.statusCode === 404) resolve(null);
+          if (err.statusCode === 404) resolve({ data: null });
           else reject(err);
         } else {
           try {
             const content = data.Body.toString();
-            resolve(JSON.parse(content) as T);
+            resolve({ 
+              data: JSON.parse(content) as T,
+              etag: data.headers.etag 
+            });
           } catch (e) {
             reject(e);
           }
@@ -52,8 +55,34 @@ export async function getJson<T>(key: string): Promise<T | null> {
   });
 }
 
-export async function putJson(key: string, data: any): Promise<void> {
-  await uploadFile(key, JSON.stringify(data, null, 2), 'application/json');
+export async function putJson(key: string, data: any, etag?: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const params: any = {
+      Bucket,
+      Region,
+      Key: key,
+      Body: JSON.stringify(data, null, 2),
+      ContentType: 'application/json',
+    };
+
+    if (etag) {
+      params.Headers = {
+        'If-Match': etag,
+      };
+    }
+
+    cos.putObject(params, (err, data) => {
+      if (err) {
+        if (err.statusCode === 412) {
+          reject(new Error('Precondition Failed: Object has been modified (Concurrency Error)'));
+        } else {
+          reject(err);
+        }
+      } else {
+        resolve();
+      }
+    });
+  });
 }
 
 export async function configureBucketLifecycle(): Promise<void> {

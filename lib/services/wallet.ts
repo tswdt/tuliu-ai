@@ -17,67 +17,93 @@ const getWalletPath = (userId: string) => `users/${userId}/wallet.json`;
  * 获取用户钱包余额
  * 如果文件不存在，默认返回余额为 0
  */
-export async function getBalance(userId: string): Promise<Wallet> {
+export async function getBalance(userId: string): Promise<{ wallet: Wallet; etag?: string }> {
   const path = getWalletPath(userId);
-  const wallet = await getJson<Wallet>(path);
+  const { data: wallet, etag } = await getJson<Wallet>(path);
   
   if (!wallet) {
-    return { balance: 0, transactions: [] };
+    return { wallet: { balance: 0, transactions: [] } };
   }
   
-  return wallet;
+  return { wallet, etag };
 }
 
 /**
  * 扣除用户积分
- * 1. 读取钱包数据
- * 2. 检查余额是否充足
- * 3. 扣除积分并记录交易
- * 4. 写回 COS
  */
 export async function deductCredit(userId: string, amount: number): Promise<Wallet> {
   const path = getWalletPath(userId);
-  const wallet = await getBalance(userId);
+  let attempts = 0;
+  const maxAttempts = 3;
 
-  if (wallet.balance < amount) {
-    throw new Error(`余额不足: 当前余额 ${wallet.balance}, 需要 ${amount}`);
+  while (attempts < maxAttempts) {
+    try {
+      const { wallet, etag } = await getBalance(userId);
+
+      if (wallet.balance < amount) {
+        throw new Error(`余额不足: 当前余额 ${wallet.balance}, 需要 ${amount}`);
+      }
+
+      const updatedWallet: Wallet = {
+        balance: wallet.balance - amount,
+        transactions: [
+          {
+            amount: -amount,
+            date: Date.now(),
+            type: 'generation_deduction',
+          },
+          ...wallet.transactions,
+        ].slice(0, 50),
+      };
+
+      await putJson(path, updatedWallet, etag);
+      return updatedWallet;
+    } catch (error: any) {
+      if (error.message.includes('Precondition Failed') && attempts < maxAttempts - 1) {
+        attempts++;
+        await new Promise(resolve => setTimeout(resolve, 100 * attempts));
+        continue;
+      }
+      throw error;
+    }
   }
-
-  const updatedWallet: Wallet = {
-    balance: wallet.balance - amount,
-    transactions: [
-      {
-        amount: -amount,
-        date: Date.now(),
-        type: 'generation_deduction',
-      },
-      ...wallet.transactions,
-    ].slice(0, 50), // 只保留最近 50 条记录
-  };
-
-  await putJson(path, updatedWallet);
-  return updatedWallet;
+  throw new Error('扣费失败: 钱包更新并发冲突');
 }
 
 /**
- * 充值积分（可选，方便后续扩展或测试）
+ * 充值积分
  */
 export async function addCredit(userId: string, amount: number): Promise<Wallet> {
   const path = getWalletPath(userId);
-  const wallet = await getBalance(userId);
+  let attempts = 0;
+  const maxAttempts = 3;
 
-  const updatedWallet: Wallet = {
-    balance: wallet.balance + amount,
-    transactions: [
-      {
-        amount: amount,
-        date: Date.now(),
-        type: 'recharge',
-      },
-      ...wallet.transactions,
-    ].slice(0, 50),
-  };
+  while (attempts < maxAttempts) {
+    try {
+      const { wallet, etag } = await getBalance(userId);
 
-  await putJson(path, updatedWallet);
-  return updatedWallet;
+      const updatedWallet: Wallet = {
+        balance: wallet.balance + amount,
+        transactions: [
+          {
+            amount: amount,
+            date: Date.now(),
+            type: 'recharge',
+          },
+          ...wallet.transactions,
+        ].slice(0, 50),
+      };
+
+      await putJson(path, updatedWallet, etag);
+      return updatedWallet;
+    } catch (error: any) {
+      if (error.message.includes('Precondition Failed') && attempts < maxAttempts - 1) {
+        attempts++;
+        await new Promise(resolve => setTimeout(resolve, 100 * attempts));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error('充值失败: 钱包更新并发冲突');
 }
