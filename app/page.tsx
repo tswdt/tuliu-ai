@@ -10,41 +10,61 @@ import { toast } from "sonner";
 
 export default function Home() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [cosImageUrl, setCosImageUrl] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [state, setState] = useState<JobState | null>(null);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
       toast.error("图片大小不能超过 10MB");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setUploadedImage(event.target?.result as string);
+
+    // Use object URL for local preview (no Base64)
+    const previewUrl = URL.createObjectURL(file);
+    setUploadedImage(previewUrl);
+    setCosImageUrl(null);
+
+    try {
+      // Get presigned URL from server
+      const presignRes = await fetch('/api/cos/presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name, contentType: file.type }),
+      });
+      if (!presignRes.ok) throw new Error('Failed to get upload URL');
+      const { uploadUrl, publicUrl } = await presignRes.json();
+
+      // Upload file directly to COS
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      });
+      if (!uploadRes.ok) throw new Error('Failed to upload to COS');
+
+      setCosImageUrl(publicUrl);
       toast.success("图片上传成功！");
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      toast.error("图片上传失败，请重试");
+      setUploadedImage(null);
+      setCosImageUrl(null);
+    }
   };
 
   const handleStart = async () => {
-    if (!uploadedImage) return;
+    if (!cosImageUrl) return;
     setLoading(true);
     const id = `job_${Date.now()}`;
     setJobId(id);
     
     try {
-      // 1. Upload the image to COS first to get a URL
-      // We use a temporary API route or a direct upload strategy
-      // For simplicity in this fix, we'll assume the server action can handle the initial upload
-      // but we'll change the logic to ensure we're passing a URL in the long run.
-      // Actually, the best way is to have a dedicated upload action.
-      // For now, we use a mock userId (e.g., from local storage or a random string)
-      const userId = 'anonymous_user_1'; 
-      await startGeneration(id, uploadedImage, userId);
+      const userId = 'anonymous_user_1';
+      await startGeneration(id, cosImageUrl, userId);
     } catch (err) {
       toast.error("启动任务失败");
       setLoading(false);
@@ -102,7 +122,7 @@ export default function Home() {
                 />
                 {!loading && (
                   <button
-                    onClick={() => { setUploadedImage(null); setJobId(null); setState(null); }}
+                    onClick={() => { setUploadedImage(null); setCosImageUrl(null); setJobId(null); setState(null); }}
                     className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 p-1 rounded-full"
                   >
                     <X className="w-4 h-4 text-white" />
@@ -131,7 +151,7 @@ export default function Home() {
           <Button 
             className="w-full bg-zinc-100 text-zinc-950 hover:bg-zinc-200 font-bold h-12" 
             onClick={handleStart}
-            disabled={loading || !uploadedImage}
+            disabled={loading || !cosImageUrl}
           >
             {loading ? (
               <>

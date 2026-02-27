@@ -1,6 +1,6 @@
 import { env } from '@/lib/env';
 import { withRetry, withTimeout } from '@/lib/utils/retry';
-import { uploadFile } from './cos';
+import { uploadStream, uploadFromUrl, MAX_UPLOAD_SIZE } from './cos';
 
 export async function callHunyuanVision(imageUrl: string): Promise<string> {
   return withRetry(async () => {
@@ -45,11 +45,17 @@ export async function callBriaMatting(imageUrl: string, jobId: string): Promise<
       });
       
       if (!response.ok) throw new Error(`Bria API failed: ${response.statusText}`);
-      
-      const blob = await response.blob();
-      const buffer = Buffer.from(await blob.arrayBuffer());
+      if (!response.body) throw new Error('Bria API returned no body');
+
+      const contentLength = response.headers.get('content-length');
+      if (contentLength && parseInt(contentLength, 10) > MAX_UPLOAD_SIZE) {
+        throw new Error(`Bria response size exceeds 20MB limit`);
+      }
+
+      const { Readable } = await import('stream');
+      const nodeStream = Readable.fromWeb(response.body as any);
       const maskKey = `jobs/${jobId}/mask.png`;
-      return await uploadFile(maskKey, buffer, 'image/png');
+      return await uploadStream(nodeStream, maskKey, 'image/png');
     }, 45000);
   });
 }
@@ -76,11 +82,9 @@ export async function callFluxFill(imageUrl: string, maskUrl: string, prompt: st
       const data = await response.json();
       const resultUrl = data.data[0].url;
       
-      // Download and save to COS for persistence
-      const imgRes = await fetch(resultUrl);
-      const buffer = Buffer.from(await imgRes.arrayBuffer());
+      // Stream from temporary URL directly to COS (avoids buffering in Node.js memory)
       const resultKey = `jobs/${jobId}/result.png`;
-      return await uploadFile(resultKey, buffer, 'image/png');
+      return await uploadFromUrl(resultUrl, resultKey, 'image/png');
     }, 60000);
   });
 }

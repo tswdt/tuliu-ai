@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const state = await getJobState(jobId);
+    const { state } = await getJobState(jobId);
     if (!state) {
       return NextResponse.json({ error: 'Job not found' }, { status: 404 });
     }
