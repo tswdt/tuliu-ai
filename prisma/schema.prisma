@@ -1,34 +1,20 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-}
+// Prisma schema for user authentication, credits, and subscriptions
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  balance   Int      @default(0)
-  generations Generation[]
-  createdAt DateTime @default(now())
+  id        Int     @id @default(autoincrement())
+  email     String  @unique
+  password  String
+  credits    Int     @default(0)
+  subscriptions Subscription[]
 }
 
-model Generation {
-  id             String   @id @default(cuid())
-  userId         String
-  user           User     @relation(fields: [userId], references: [id])
-  status         String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
-  inputUrl       String
-  maskUrl        String?
-  resultUrl      String?
-  providerTaskId String?  @unique // SiliconFlow or other provider task ID
-  prompt         String?  @db.Text
-  error          String?  @db.Text
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+model Subscription {
+  id                Int     @id @default(autoincrement())
+  userId            Int
+  plan              String
+  status            String
+  startDate         DateTime
+  endDate           DateTime
 
-  @@index([userId])
-  @@index([providerTaskId])
+  user              User    @relation(fields: [userId], references: [id])
 }
