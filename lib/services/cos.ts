@@ -137,6 +137,29 @@ export async function uploadFromUrl(url: string, key: string, contentType: strin
   });
 }
 
+export { Bucket, Region };
+
+const PRESIGN_URL_EXPIRY_SECONDS = 900;
+
+export async function getPresignedUploadUrl(key: string, expirySeconds: number = PRESIGN_URL_EXPIRY_SECONDS): Promise<string> {
+  return new Promise((resolve, reject) => {
+    cos.getObjectUrl(
+      {
+        Bucket,
+        Region,
+        Key: key,
+        Method: 'PUT',
+        Expires: expirySeconds,
+        Sign: true,
+      },
+      (err, data) => {
+        if (err) reject(err);
+        else resolve(data.Url);
+      }
+    );
+  });
+}
+
 export async function configureBucketLifecycle(): Promise<void> {
   return new Promise((resolve, reject) => {
     cos.putBucketLifecycle(

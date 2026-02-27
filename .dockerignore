@@ -1,6 +1,12 @@
 node_modules
 .next
 .git
+.gitignore
+*.md
+.env
+.env.local
+.env.*.local
+scripts/
 .env
 .env.local
 .env.production

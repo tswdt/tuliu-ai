@@ -9,9 +9,9 @@ const envSchema = z.object({
   BRIA_API_KEY: z.string().min(1),
   JWT_SECRET: z.string().min(1),
   COS_LIFECYCLE_CONFIGURED: z.string().optional(), // Used to prevent repeated lifecycle configuration
-  TENCENT_CLOUD_SECRET_ID: z.string().optional(),
-  TENCENT_CLOUD_SECRET_KEY: z.string().optional(),
-  TENCENT_CLOUD_REGION: z.string().optional().default('ap-guangzhou'),
+  TENCENT_CLOUD_SECRET_ID: z.string().min(1),
+  TENCENT_CLOUD_SECRET_KEY: z.string().min(1),
+  TENCENT_CLOUD_REGION: z.string().default('ap-guangzhou'),
 });
 
 export const env = envSchema.parse({
