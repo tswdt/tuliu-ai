@@ -1,4 +1,5 @@
 import COS from 'cos-nodejs-sdk-v5';
+import type { Stream } from 'stream';
 import { env } from '@/lib/env';
 
 const cos = new COS({
@@ -82,6 +83,57 @@ export async function putJson(key: string, data: any, etag?: string): Promise<vo
         resolve();
       }
     });
+  });
+}
+
+export const MAX_UPLOAD_SIZE = 20 * 1024 * 1024; // 20MB
+
+export async function uploadStream(stream: Stream, key: string, contentType: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    cos.putObject(
+      {
+        Bucket,
+        Region,
+        Key: key,
+        Body: stream,
+        ContentType: contentType,
+      },
+      (err, data) => {
+        if (err) reject(err);
+        else resolve(`https://${data.Location}`);
+      }
+    );
+  });
+}
+
+export async function uploadFromUrl(url: string, key: string, contentType: string): Promise<string> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to fetch from URL: ${response.statusText}`);
+  if (!response.body) throw new Error('No response body');
+
+  const contentLength = response.headers.get('content-length');
+  if (contentLength && parseInt(contentLength, 10) > MAX_UPLOAD_SIZE) {
+    throw new Error(`Response size ${contentLength} bytes exceeds 20MB limit`);
+  }
+
+  // Stream the response body directly to COS
+  const { Readable } = await import('stream');
+  const nodeStream = Readable.fromWeb(response.body as any);
+
+  return new Promise((resolve, reject) => {
+    cos.putObject(
+      {
+        Bucket,
+        Region,
+        Key: key,
+        Body: nodeStream,
+        ContentType: contentType,
+      },
+      (err, data) => {
+        if (err) reject(err);
+        else resolve(`https://${data.Location}`);
+      }
+    );
   });
 }
 

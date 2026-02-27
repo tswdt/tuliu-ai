@@ -2,7 +2,6 @@
 
 import { initJob, updateJobState, getJobState } from '@/lib/services/job';
 import { callHunyuanVision, callBriaMatting, callFluxFill } from '@/lib/services/ai';
-import { uploadFile } from '@/lib/services/cos';
 import { validateTurnstile } from '@/lib/services/security';
 import { validateText, validateImage } from '@/lib/services/safety';
 import { deductCredit } from '@/lib/services/wallet';
@@ -27,19 +26,10 @@ export async function startGeneration(jobId: string, inputImage: string, userId:
 
   // 2. Init if not exists
   if (!state) {
-    let finalImageUrl = inputImage;
-    
-    // If input is base64, upload to COS first
-    if (inputImage.startsWith('data:image')) {
-      const base64Data = inputImage.split(',')[1];
-      const buffer = Buffer.from(base64Data, 'base64');
-      const mimeType = inputImage.split(';')[0].split(':')[1];
-      const extension = mimeType.split('/')[1] || 'png';
-      const key = `jobs/${jobId}/input.${extension}`;
-      finalImageUrl = await uploadFile(key, buffer, mimeType);
+    if (!inputImage.startsWith('https://')) {
+      throw new Error('inputImage must be a valid https:// URL');
     }
-
-    state = await initJob(jobId, finalImageUrl);
+    state = await initJob(jobId, inputImage);
   }
 
   const imageUrl = state.inputUrl!;
