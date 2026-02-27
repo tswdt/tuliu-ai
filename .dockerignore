@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.env
+.env.local
+.env.production
+.env.development
+scripts/
+*.log
+coverage/
+.DS_Store

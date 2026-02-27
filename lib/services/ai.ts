@@ -2,7 +2,14 @@ import { env } from '@/lib/env';
 import { withRetry, withTimeout } from '@/lib/utils/retry';
 import { uploadStream, uploadFromUrl, MAX_UPLOAD_SIZE } from './cos';
 
-export async function callHunyuanVision(imageUrl: string): Promise<string> {
+export async function callHunyuanVision(imageUrl: string, style: string = 'white'): Promise<string> {
+  const styleInstructions: Record<string, string> = {
+    white: 'Describe this product in detail for a clean white background commercial photography prompt. Focus on product shape, texture, color, and material.',
+    scene: 'Describe this product in detail for a lifestyle scene commercial photography prompt. Suggest a contextual environment that matches the product style.',
+    model: 'Describe this product in detail for a fashion/lifestyle model shot prompt. Suggest how a model would use or wear this product in an aspirational setting.',
+  };
+  const instruction = styleInstructions[style] ?? styleInstructions.white;
+
   return withRetry(async () => {
     return withTimeout(async () => {
       const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
@@ -17,7 +24,7 @@ export async function callHunyuanVision(imageUrl: string): Promise<string> {
             {
               role: "user",
               content: [
-                { type: "text", text: "Describe this product in detail for a commercial photography prompt." },
+                { type: "text", text: instruction },
                 { type: "image_url", image_url: { url: imageUrl } }
               ]
             }
@@ -60,7 +67,15 @@ export async function callBriaMatting(imageUrl: string, jobId: string): Promise<
   });
 }
 
-export async function callFluxFill(imageUrl: string, maskUrl: string, prompt: string, jobId: string): Promise<string> {
+export async function callFluxFill(imageUrl: string, maskUrl: string, prompt: string, jobId: string, customPrompt?: string, style: string = 'white'): Promise<string> {
+  const stylePrefix: Record<string, string> = {
+    white: 'Clean white background commercial product photo,',
+    scene: 'Lifestyle scene commercial product photo,',
+    model: 'Fashion lifestyle model shot,',
+  };
+  const prefix = stylePrefix[style] ?? stylePrefix.white;
+  const finalPrompt = customPrompt ? `${prefix} ${prompt}, ${customPrompt}` : `${prefix} ${prompt}`;
+
   return withRetry(async () => {
     return withTimeout(async () => {
       const response = await fetch('https://api.siliconflow.cn/v1/images/generations', {
@@ -71,7 +86,7 @@ export async function callFluxFill(imageUrl: string, maskUrl: string, prompt: st
         },
         body: JSON.stringify({
           model: "black-forest-labs/FLUX.1-Fill-dev",
-          prompt: `Commercial masterpiece, ${prompt}`,
+          prompt: `Commercial masterpiece, ${finalPrompt}`,
           image_url: imageUrl,
           mask_url: maskUrl,
         }),

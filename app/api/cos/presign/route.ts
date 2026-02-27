@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import COS from 'cos-nodejs-sdk-v5';
 import { env } from '@/lib/env';
+import { checkRateLimit, presignRateLimit } from '@/lib/utils/rate-limit';
 
 const cos = new COS({
   SecretId: env.TENCENT_COS_SECRET_ID,
@@ -13,6 +14,12 @@ const Region = env.TENCENT_COS_REGION;
 const PRESIGN_URL_EXPIRY_SECONDS = 900;
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for') ?? 'unknown';
+  const rl = checkRateLimit(`presign:${ip}`, presignRateLimit);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: '请求过于频繁，请稍后再试' }, { status: 429 });
+  }
+
   try {
     const { filename, contentType } = await req.json();
 

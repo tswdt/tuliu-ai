@@ -1,18 +1,28 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { fabric } from 'fabric';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Upload, Trash2, Download, Eraser, Pencil } from 'lucide-react';
+import { Upload, Trash2, Download, Eraser, Pencil, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSearchParams } from 'next/navigation';
 
 export default function EditorPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-zinc-950 text-zinc-400">加载中...</div>}>
+      <EditorContent />
+    </Suspense>
+  );
+}
+
+function EditorContent() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fabricCanvas, setFabricCanvas] = useState<fabric.Canvas | null>(null);
   const [brushSize, setBrushSize] = useState(20);
   const [isDrawing, setIsDrawing] = useState(true);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -33,6 +43,31 @@ export default function EditorPage() {
     setFabricCanvas(canvas);
     return () => { canvas.dispose(); };
   }, []);
+
+  // Load result image from jobId query param
+  useEffect(() => {
+    const jobId = searchParams.get('jobId');
+    if (!jobId || !fabricCanvas) return;
+
+    fetch(`/api/poll?jobId=${jobId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((state) => {
+        const url = state?.resultUrl ?? state?.inputUrl;
+        if (!url) return;
+        fabric.Image.fromURL(url, (img) => {
+          const maxWidth = 800;
+          const scale = Math.min(maxWidth / (img.width || 800), 1);
+          img.scale(scale);
+          fabricCanvas.setDimensions({
+            width: (img.width || 800) * scale,
+            height: (img.height || 600) * scale,
+          });
+          fabricCanvas.setBackgroundImage(img, fabricCanvas.renderAll.bind(fabricCanvas));
+          toast.success('结果图已加载到编辑器');
+        }, { crossOrigin: 'anonymous' });
+      })
+      .catch(() => toast.error('加载结果图失败'));
+  }, [fabricCanvas, searchParams]);
 
   // 同步画笔大小
   useEffect(() => {
@@ -61,6 +96,16 @@ export default function EditorPage() {
       URL.revokeObjectURL(objectUrl);
       toast.success("背景图已加载");
     });
+  };
+
+  const handleDownload = () => {
+    if (!fabricCanvas) return;
+    const dataUrl = fabricCanvas.toDataURL({ format: 'png', multiplier: 1 });
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = `edited_${Date.now()}.png`;
+    link.click();
+    toast.success('图片已下载');
   };
 
   const exportMask = () => {
@@ -170,6 +215,9 @@ export default function EditorPage() {
             </div>
 
             <div className="space-y-4 pt-4 border-t border-zinc-800">
+              <Button className="w-full bg-green-700 hover:bg-green-600" onClick={handleDownload}>
+                <Download className="w-4 h-4 mr-2" /> 下载图片
+              </Button>
               <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={exportMask}>
                 <Download className="w-4 h-4 mr-2" /> 导出遮罩
               </Button>
