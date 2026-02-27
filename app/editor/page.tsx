@@ -31,7 +31,7 @@ export default function EditorPage() {
     canvas.freeDrawingBrush = brush;
 
     setFabricCanvas(canvas);
-    return () => canvas.dispose();
+    return () => { canvas.dispose(); };
   }, []);
 
   // 同步画笔大小
@@ -45,25 +45,22 @@ export default function EditorPage() {
     const file = e.target.files?.[0];
     if (!file || !fabricCanvas) return;
 
-    const reader = new FileReader();
-    reader.onload = (f) => {
-      const data = f.target?.result as string;
-      fabric.Image.fromURL(data, (img) => {
-        // 调整画布大小以适应图片
-        const maxWidth = 800;
-        const scale = Math.min(maxWidth / (img.width || 800), 1);
-        
-        img.scale(scale);
-        fabricCanvas.setDimensions({
-          width: (img.width || 800) * scale,
-          height: (img.height || 600) * scale,
-        });
-        
-        fabricCanvas.setBackgroundImage(img, fabricCanvas.renderAll.bind(fabricCanvas));
-        toast.success("背景图已加载");
+    const objectUrl = URL.createObjectURL(file);
+    fabric.Image.fromURL(objectUrl, (img) => {
+      // 调整画布大小以适应图片
+      const maxWidth = 800;
+      const scale = Math.min(maxWidth / (img.width || 800), 1);
+
+      img.scale(scale);
+      fabricCanvas.setDimensions({
+        width: (img.width || 800) * scale,
+        height: (img.height || 600) * scale,
       });
-    };
-    reader.readAsDataURL(file);
+
+      fabricCanvas.setBackgroundImage(img, fabricCanvas.renderAll.bind(fabricCanvas));
+      URL.revokeObjectURL(objectUrl);
+      toast.success("背景图已加载");
+    });
   };
 
   const exportMask = () => {

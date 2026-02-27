@@ -46,32 +46,51 @@ export function ImageComparison({
     setSliderPosition(newPosition);
   };
 
+  const handleSliderMoveNative = (event: MouseEvent | TouchEvent) => {
+    if (!containerRef.current) return;
+
+    const containerRect = containerRef.current.getBoundingClientRect();
+    let clientX: number;
+
+    if ("touches" in event && event.touches && event.touches.length > 0) {
+      clientX = event.touches[0].clientX;
+    } else if ("clientX" in event) {
+      clientX = (event as MouseEvent).clientX;
+    } else {
+      return;
+    }
+
+    let newPosition = ((clientX - containerRect.left) / containerRect.width) * 100;
+    newPosition = Math.max(0, Math.min(100, newPosition));
+    setSliderPosition(newPosition);
+  };
+
   const handleMouseDown = () => {
-    window.addEventListener("mousemove", handleSliderMove);
+    window.addEventListener("mousemove", handleSliderMoveNative);
     window.addEventListener("mouseup", handleMouseUp);
   };
 
   const handleMouseUp = () => {
-    window.removeEventListener("mousemove", handleSliderMove);
+    window.removeEventListener("mousemove", handleSliderMoveNative);
     window.removeEventListener("mouseup", handleMouseUp);
   };
 
   const handleTouchStart = () => {
-    window.addEventListener("touchmove", handleSliderMove);
+    window.addEventListener("touchmove", handleSliderMoveNative);
     window.addEventListener("touchend", handleTouchEnd);
   };
 
   const handleTouchEnd = () => {
-    window.removeEventListener("touchmove", handleSliderMove);
+    window.removeEventListener("touchmove", handleSliderMoveNative);
     window.removeEventListener("touchend", handleTouchEnd);
   };
 
   useEffect(() => {
     // Cleanup event listeners on component unmount
     return () => {
-      window.removeEventListener("mousemove", handleSliderMove);
+      window.removeEventListener("mousemove", handleSliderMoveNative);
       window.removeEventListener("mouseup", handleMouseUp);
-      window.removeEventListener("touchmove", handleSliderMove);
+      window.removeEventListener("touchmove", handleSliderMoveNative);
       window.removeEventListener("touchend", handleTouchEnd);
     };
   }, []);

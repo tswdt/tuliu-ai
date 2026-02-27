@@ -6,7 +6,7 @@ async function testWallet() {
   const userId = 'test_user_' + Date.now();
   
   try {
-    let wallet = await getBalance(userId);
+    let { wallet } = await getBalance(userId);
     console.log('Initial balance:', wallet.balance);
 
     wallet = await addCredit(userId, 10);

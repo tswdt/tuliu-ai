@@ -45,7 +45,7 @@ export async function getJson<T>(key: string): Promise<{ data: T | null; etag?: 
             const content = data.Body.toString();
             resolve({ 
               data: JSON.parse(content) as T,
-              etag: data.headers.etag 
+              etag: data.headers?.etag 
             });
           } catch (e) {
             reject(e);
@@ -145,7 +145,7 @@ export async function configureBucketLifecycle(): Promise<void> {
         Region,
         Rules: [
           {
-            Id: 'deleteJobsAfter7Days',
+            ID: 'deleteJobsAfter7Days',
             Filter: {
               Prefix: 'jobs/', // Apply to objects under the 'jobs/' prefix
             },
