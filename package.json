@@ -24,7 +24,8 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "tencentcloud-sdk-nodejs": "^4.1.183",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

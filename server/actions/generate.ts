@@ -1,6 +1,6 @@
 'use server';
 
-import { initJob, updateJobState, getJobState } from '@/lib/services/job';
+import { initJob, updateJobState, getJobState, addJobToUserIndex } from '@/lib/services/job';
 import { callHunyuanVision, callBriaMatting, callFluxFill } from '@/lib/services/ai';
 import { validateTurnstile } from '@/lib/services/security';
 import { validateText, validateImage } from '@/lib/services/safety';
@@ -30,6 +30,7 @@ export async function startGeneration(jobId: string, inputImage: string, userId:
       throw new Error('inputImage must be a valid https:// URL');
     }
     state = await initJob(jobId, inputImage);
+    await addJobToUserIndex(userId, jobId).catch(() => {});
   }
 
   const imageUrl = state.inputUrl!;

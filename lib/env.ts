@@ -13,21 +13,25 @@ const envSchema = z.object({
   TENCENT_CLOUD_REGION: z.string().optional().default('ap-guangzhou'),
 });
 
-export const env = envSchema.parse({
-  TENCENT_COS_SECRET_ID: process.env.TENCENT_COS_SECRET_ID,
-  TENCENT_COS_SECRET_KEY: process.env.TENCENT_COS_SECRET_KEY,
-  TENCENT_COS_BUCKET: process.env.TENCENT_COS_BUCKET,
-  TENCENT_COS_REGION: process.env.TENCENT_COS_REGION,
-  SILICONFLOW_KEY: process.env.SILICONFLOW_KEY,
-  BRIA_API_KEY: process.env.BRIA_API_KEY,
-  COS_LIFECYCLE_CONFIGURED: process.env.COS_LIFECYCLE_CONFIGURED,
-  TENCENT_CLOUD_SECRET_ID: process.env.TENCENT_CLOUD_SECRET_ID || process.env.TENCENT_COS_SECRET_ID,
-  TENCENT_CLOUD_SECRET_KEY: process.env.TENCENT_CLOUD_SECRET_KEY || process.env.TENCENT_COS_SECRET_KEY,
-  TENCENT_CLOUD_REGION: process.env.TENCENT_CLOUD_REGION,
-});
+const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
+
+export const env = isBuildPhase
+  ? (process.env as unknown as z.infer<typeof envSchema>)
+  : envSchema.parse({
+      TENCENT_COS_SECRET_ID: process.env.TENCENT_COS_SECRET_ID,
+      TENCENT_COS_SECRET_KEY: process.env.TENCENT_COS_SECRET_KEY,
+      TENCENT_COS_BUCKET: process.env.TENCENT_COS_BUCKET,
+      TENCENT_COS_REGION: process.env.TENCENT_COS_REGION,
+      SILICONFLOW_KEY: process.env.SILICONFLOW_KEY,
+      BRIA_API_KEY: process.env.BRIA_API_KEY,
+      COS_LIFECYCLE_CONFIGURED: process.env.COS_LIFECYCLE_CONFIGURED,
+      TENCENT_CLOUD_SECRET_ID: process.env.TENCENT_CLOUD_SECRET_ID || process.env.TENCENT_COS_SECRET_ID,
+      TENCENT_CLOUD_SECRET_KEY: process.env.TENCENT_CLOUD_SECRET_KEY || process.env.TENCENT_COS_SECRET_KEY,
+      TENCENT_CLOUD_REGION: process.env.TENCENT_CLOUD_REGION,
+    });
 
 // Configure COS bucket lifecycle rules once on startup if the environment variable is set
-if (env.COS_LIFECYCLE_CONFIGURED === 'true') {
+if (!isBuildPhase && env.COS_LIFECYCLE_CONFIGURED === 'true') {
   import("@/lib/services/cos").then(({ configureBucketLifecycle }) => {
     configureBucketLifecycle().catch(console.error);
   });

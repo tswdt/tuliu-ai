@@ -56,6 +56,19 @@ export async function updateJobState(
   throw new Error('Failed to update job state after multiple attempts');
 }
 
+export async function addJobToUserIndex(userId: string, jobId: string): Promise<void> {
+  const path = `users/${userId}/jobs.json`;
+  const { data: jobs } = await getJson<string[]>(path);
+  const updatedJobs = [jobId, ...(jobs || [])].slice(0, 100);
+  await putJson(path, updatedJobs);
+}
+
+export async function getUserJobs(userId: string): Promise<string[]> {
+  const path = `users/${userId}/jobs.json`;
+  const { data: jobs } = await getJson<string[]>(path);
+  return jobs || [];
+}
+
 export async function initJob(jobId: string, inputUrl: string): Promise<JobState> {
   const initialState: JobState = {
     id: jobId,
