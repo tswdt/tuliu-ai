@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { getPresignedUploadUrl, Bucket, Region } from '@/lib/services/cos';
+import COS from 'cos-nodejs-sdk-v5';
+import { env } from '@/lib/env';
+import { checkRateLimit, presignRateLimit } from '@/lib/utils/rate-limit';
 
 const ALLOWED_CONTENT_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const MAX_FILENAME_LENGTH = 100;
@@ -10,6 +13,10 @@ export async function POST(req: NextRequest) {
   const user = await getCurrentUser(req.headers.get('cookie'));
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const ip = req.headers.get('x-forwarded-for') ?? 'unknown';
+  const rl = checkRateLimit(`presign:${ip}`, presignRateLimit);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: '请求过于频繁，请稍后再试' }, { status: 429 });
   }
 
   try {
