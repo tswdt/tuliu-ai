@@ -12,12 +12,17 @@ export async function GET(req: NextRequest) {
 
   const jobIds = await getUserJobs(user.userId);
 
-  const jobs = await Promise.all(
+  const results = await Promise.allSettled(
     jobIds.map(async (jobId) => {
       const { state } = await getJobState(jobId);
       return state;
     })
   );
 
-  return NextResponse.json({ jobs: jobs.filter(Boolean) });
+  const jobs = results
+    .filter((r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof getJobState>>['state']> => r.status === 'fulfilled')
+    .map((r) => r.value)
+    .filter(Boolean);
+
+  return NextResponse.json({ jobs });
 }

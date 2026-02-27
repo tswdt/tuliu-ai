@@ -57,7 +57,8 @@ export default function GeneratePage() {
 
       setCosImageUrl(publicUrl);
       toast.success("图片上传成功！");
-    } catch {
+    } catch (err) {
+      console.error('Image upload failed:', err);
       toast.error("图片上传失败，请重试");
       setUploadedImage(null);
       setCosImageUrl(null);
@@ -73,7 +74,8 @@ export default function GeneratePage() {
     try {
       const currentUserId = userId ?? 'anonymous';
       await startGeneration(id, cosImageUrl, currentUserId);
-    } catch {
+    } catch (err) {
+      console.error('Start generation failed:', err);
       toast.error("启动任务失败");
       setLoading(false);
     }

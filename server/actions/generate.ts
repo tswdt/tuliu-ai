@@ -30,7 +30,9 @@ export async function startGeneration(jobId: string, inputImage: string, userId:
       throw new Error('inputImage must be a valid https:// URL');
     }
     state = await initJob(jobId, inputImage);
-    await addJobToUserIndex(userId, jobId).catch(() => {});
+    await addJobToUserIndex(userId, jobId).catch((err) => {
+      console.error(`Failed to index job ${jobId} for user ${userId}:`, err);
+    });
   }
 
   const imageUrl = state.inputUrl!;

@@ -22,7 +22,7 @@ export default function DashboardPage() {
       fetch('/api/jobs/history')
         .then((res) => (res.ok ? res.json() : { jobs: [] }))
         .then((data) => setJobs(data.jobs || []))
-        .catch(() => setJobs([]))
+        .catch((err) => { console.error('Failed to load job history:', err); setJobs([]); })
         .finally(() => setJobsLoading(false));
     } else if (!authLoading) {
       setJobsLoading(false);
