@@ -1,4 +1,5 @@
 import { jwtVerify } from 'jose';
+import { env } from '@/lib/env';
 
 export interface AuthUser {
   userId: string;
@@ -6,9 +7,7 @@ export interface AuthUser {
 }
 
 function getJwtSecret(): Uint8Array {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error('JWT_SECRET is not configured');
-  return new TextEncoder().encode(secret);
+  return new TextEncoder().encode(env.JWT_SECRET);
 }
 
 export async function getCurrentUser(cookieHeader: string | null): Promise<AuthUser | null> {
