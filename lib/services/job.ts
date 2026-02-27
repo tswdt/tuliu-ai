@@ -4,15 +4,19 @@ export type JobStatus = 'pending' | 'analyzing' | 'matting' | 'styling' | 'gener
 
 export interface JobState {
   id: string;
+  userId?: string;
   status: JobStatus;
   progress: number;
   inputUrl?: string;
   maskUrl?: string;
   resultUrl?: string;
   analysis?: string;
+  style?: string;
+  ratio?: string;
   error?: string;
   logs: string[];
   updatedAt: string;
+  createdAt?: string;
 }
 
 export async function getJobState(jobId: string): Promise<{ state: JobState | null; etag?: string }> {
@@ -35,7 +39,6 @@ export async function updateJobState(
         id: jobId,
         status: 'pending',
         progress: 0,
-        updatedAt: new Date().toISOString(),
         ...current,
         ...updates,
         logs: [...(current?.logs || []), ...(updates.logs || [])],
@@ -57,16 +60,34 @@ export async function updateJobState(
   throw new Error('Failed to update job state after multiple attempts');
 }
 
-export async function initJob(jobId: string, inputUrl: string): Promise<JobState> {
+export async function initJob(jobId: string, inputUrl: string, userId?: string, style?: string, ratio?: string): Promise<JobState> {
+  const now = new Date().toISOString();
   const initialState: JobState = {
     id: jobId,
+    userId,
     status: 'pending',
     progress: 0,
     inputUrl,
+    style,
+    ratio,
     logs: [],
-    updatedAt: new Date().toISOString(),
+    updatedAt: now,
+    createdAt: now,
   };
   
   await putJson(`jobs/${jobId}.json`, initialState);
+
+  // Update user job index if userId provided
+  if (userId) {
+    try {
+      const { data: existing } = await getJson<{ jobs: Array<{ jobId: string; createdAt: string }> }>(`users/${userId}/jobs.json`);
+      const jobs = existing?.jobs ?? [];
+      jobs.unshift({ jobId, createdAt: now });
+      await putJson(`users/${userId}/jobs.json`, { jobs: jobs.slice(0, 100) });
+    } catch {
+      // Non-critical — ignore failures
+    }
+  }
+
   return initialState;
 }

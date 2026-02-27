@@ -1,4 +1,5 @@
 import COS from 'cos-nodejs-sdk-v5';
+import type { Stream } from 'stream';
 import { env } from '@/lib/env';
 
 const cos = new COS({
@@ -44,7 +45,7 @@ export async function getJson<T>(key: string): Promise<{ data: T | null; etag?: 
             const content = data.Body.toString();
             resolve({ 
               data: JSON.parse(content) as T,
-              etag: data.headers.etag 
+              etag: data.headers?.etag 
             });
           } catch (e) {
             reject(e);
@@ -85,6 +86,80 @@ export async function putJson(key: string, data: any, etag?: string): Promise<vo
   });
 }
 
+export const MAX_UPLOAD_SIZE = 20 * 1024 * 1024; // 20MB
+
+export async function uploadStream(stream: Stream, key: string, contentType: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    cos.putObject(
+      {
+        Bucket,
+        Region,
+        Key: key,
+        Body: stream,
+        ContentType: contentType,
+      },
+      (err, data) => {
+        if (err) reject(err);
+        else resolve(`https://${data.Location}`);
+      }
+    );
+  });
+}
+
+export async function uploadFromUrl(url: string, key: string, contentType: string): Promise<string> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Failed to fetch from URL: ${response.statusText}`);
+  if (!response.body) throw new Error('No response body');
+
+  const contentLength = response.headers.get('content-length');
+  if (contentLength && parseInt(contentLength, 10) > MAX_UPLOAD_SIZE) {
+    throw new Error(`Response size ${contentLength} bytes exceeds 20MB limit`);
+  }
+
+  // Stream the response body directly to COS
+  const { Readable } = await import('stream');
+  const nodeStream = Readable.fromWeb(response.body as any);
+
+  return new Promise((resolve, reject) => {
+    cos.putObject(
+      {
+        Bucket,
+        Region,
+        Key: key,
+        Body: nodeStream,
+        ContentType: contentType,
+      },
+      (err, data) => {
+        if (err) reject(err);
+        else resolve(`https://${data.Location}`);
+      }
+    );
+  });
+}
+
+export { Bucket, Region };
+
+const PRESIGN_URL_EXPIRY_SECONDS = 900;
+
+export async function getPresignedUploadUrl(key: string, expirySeconds: number = PRESIGN_URL_EXPIRY_SECONDS): Promise<string> {
+  return new Promise((resolve, reject) => {
+    cos.getObjectUrl(
+      {
+        Bucket,
+        Region,
+        Key: key,
+        Method: 'PUT',
+        Expires: expirySeconds,
+        Sign: true,
+      },
+      (err, data) => {
+        if (err) reject(err);
+        else resolve(data.Url);
+      }
+    );
+  });
+}
+
 export async function configureBucketLifecycle(): Promise<void> {
   return new Promise((resolve, reject) => {
     cos.putBucketLifecycle(
@@ -93,7 +168,7 @@ export async function configureBucketLifecycle(): Promise<void> {
         Region,
         Rules: [
           {
-            Id: 'deleteJobsAfter7Days',
+            ID: 'deleteJobsAfter7Days',
             Filter: {
               Prefix: 'jobs/', // Apply to objects under the 'jobs/' prefix
             },

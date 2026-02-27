@@ -2,13 +2,12 @@
 
 import { initJob, updateJobState, getJobState } from '@/lib/services/job';
 import { callHunyuanVision, callBriaMatting, callFluxFill } from '@/lib/services/ai';
-import { uploadFile } from '@/lib/services/cos';
 import { validateTurnstile } from '@/lib/services/security';
 import { validateText, validateImage } from '@/lib/services/safety';
 import { deductCredit } from '@/lib/services/wallet';
 import { validateId } from '@/lib/utils';
 
-export async function startGeneration(jobId: string, inputImage: string, userId: string, turnstileToken?: string) {
+export async function startGeneration(jobId: string, inputImage: string, userId: string, turnstileToken?: string, style?: string, ratio?: string, customPrompt?: string) {
   // 0. Security Check
   if (!validateId(jobId)) throw new Error('Invalid jobId');
   if (!validateId(userId)) throw new Error('Invalid userId');
@@ -27,19 +26,10 @@ export async function startGeneration(jobId: string, inputImage: string, userId:
 
   // 2. Init if not exists
   if (!state) {
-    let finalImageUrl = inputImage;
-    
-    // If input is base64, upload to COS first
-    if (inputImage.startsWith('data:image')) {
-      const base64Data = inputImage.split(',')[1];
-      const buffer = Buffer.from(base64Data, 'base64');
-      const mimeType = inputImage.split(';')[0].split(':')[1];
-      const extension = mimeType.split('/')[1] || 'png';
-      const key = `jobs/${jobId}/input.${extension}`;
-      finalImageUrl = await uploadFile(key, buffer, mimeType);
+    if (!inputImage.startsWith('https://')) {
+      throw new Error('inputImage must be a valid https:// URL');
     }
-
-    state = await initJob(jobId, finalImageUrl);
+    state = await initJob(jobId, inputImage, userId, style, ratio);
   }
 
   const imageUrl = state.inputUrl!;
@@ -71,7 +61,7 @@ export async function startGeneration(jobId: string, inputImage: string, userId:
         progress: 20, 
         logs: [`[${new Date().toISOString()}] 开始视觉分析 (Hunyuan Vision)`] 
       });
-      const analysis = await callHunyuanVision(imageUrl);
+      const analysis = await callHunyuanVision(imageUrl, style ?? 'white');
       
       // 4.1 Text Safety Check for AI Analysis
       const isTextSafe = await validateText(analysis);
@@ -108,7 +98,7 @@ export async function startGeneration(jobId: string, inputImage: string, userId:
         progress: 80, 
         logs: [`[${new Date().toISOString()}] 开始场景重绘 (Flux Fill)`] 
       });
-      const resultUrl = await callFluxFill(imageUrl, state.maskUrl!, state.analysis!, jobId);
+      const resultUrl = await callFluxFill(imageUrl, state.maskUrl!, state.analysis!, jobId, customPrompt, style ?? 'white');
       state = await updateJobState(jobId, { 
         status: 'completed', 
         progress: 100, 

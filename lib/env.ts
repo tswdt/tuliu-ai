@@ -7,10 +7,11 @@ const envSchema = z.object({
   TENCENT_COS_REGION: z.string().min(1),
   SILICONFLOW_KEY: z.string().min(1),
   BRIA_API_KEY: z.string().min(1),
+  JWT_SECRET: z.string().min(1),
   COS_LIFECYCLE_CONFIGURED: z.string().optional(), // Used to prevent repeated lifecycle configuration
-  TENCENT_CLOUD_SECRET_ID: z.string().optional(),
-  TENCENT_CLOUD_SECRET_KEY: z.string().optional(),
-  TENCENT_CLOUD_REGION: z.string().optional().default('ap-guangzhou'),
+  TENCENT_CLOUD_SECRET_ID: z.string().min(1),
+  TENCENT_CLOUD_SECRET_KEY: z.string().min(1),
+  TENCENT_CLOUD_REGION: z.string().default('ap-guangzhou'),
 });
 
 export const env = envSchema.parse({
@@ -20,6 +21,7 @@ export const env = envSchema.parse({
   TENCENT_COS_REGION: process.env.TENCENT_COS_REGION,
   SILICONFLOW_KEY: process.env.SILICONFLOW_KEY,
   BRIA_API_KEY: process.env.BRIA_API_KEY,
+  JWT_SECRET: process.env.JWT_SECRET,
   COS_LIFECYCLE_CONFIGURED: process.env.COS_LIFECYCLE_CONFIGURED,
   TENCENT_CLOUD_SECRET_ID: process.env.TENCENT_CLOUD_SECRET_ID || process.env.TENCENT_COS_SECRET_ID,
   TENCENT_CLOUD_SECRET_KEY: process.env.TENCENT_CLOUD_SECRET_KEY || process.env.TENCENT_COS_SECRET_KEY,

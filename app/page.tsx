@@ -1,204 +1,131 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { startGeneration } from '@/server/actions/generate';
-import { JobState } from '@/lib/services/job';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Loader2, Upload, X, CheckCircle2, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
+import { Eye, Scissors, ImagePlay, ArrowRight } from 'lucide-react';
 
-export default function Home() {
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [jobId, setJobId] = useState<string | null>(null);
-  const [state, setState] = useState<JobState | null>(null);
-  const [loading, setLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+export default function LandingPage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("图片大小不能超过 10MB");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setUploadedImage(event.target?.result as string);
-      toast.success("图片上传成功！");
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleStart = async () => {
-    if (!uploadedImage) return;
-    setLoading(true);
-    const id = `job_${Date.now()}`;
-    setJobId(id);
-    
-    try {
-      // 1. Upload the image to COS first to get a URL
-      // We use a temporary API route or a direct upload strategy
-      // For simplicity in this fix, we'll assume the server action can handle the initial upload
-      // but we'll change the logic to ensure we're passing a URL in the long run.
-      // Actually, the best way is to have a dedicated upload action.
-      // For now, we use a mock userId (e.g., from local storage or a random string)
-      const userId = 'anonymous_user_1'; 
-      await startGeneration(id, uploadedImage, userId);
-    } catch (err) {
-      toast.error("启动任务失败");
-      setLoading(false);
-    }
-  };
-
-  // Polling logic
   useEffect(() => {
-    if (!jobId || state?.status === 'completed' || state?.status === 'failed') {
-      if (state?.status === 'completed' || state?.status === 'failed') {
-        setLoading(false);
-      }
-      return;
-    }
-
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/poll?jobId=${jobId}`);
-        if (res.ok) {
-          const data = await res.json();
-          setState(data);
-        }
-      } catch (err) {
-        console.error('Polling failed', err);
-      }
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [jobId, state?.status]);
+    fetch('/api/auth/me')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.userId) setIsLoggedIn(true); })
+      .catch(() => {});
+  }, []);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      <header className="border-b border-zinc-800 bg-zinc-950/50 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <h1 className="text-3xl font-light tracking-tight">
-            图流 AI <span className="text-zinc-500">/ 智能电商摄影</span>
-          </h1>
-          <p className="text-zinc-400 text-sm mt-2">
-            基于腾讯云 COS 状态流转的无服务器架构
-          </p>
+    <div className="bg-zinc-950 text-zinc-100">
+      {/* Hero Section */}
+      <section className="max-w-7xl mx-auto px-4 py-24 text-center space-y-6">
+        <div className="inline-flex items-center gap-2 bg-blue-950/50 border border-blue-800/50 rounded-full px-4 py-1.5 text-xs text-blue-300 mb-4">
+          <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
+          基于腾讯云 AI 驱动
         </div>
-      </header>
+        <h1 className="text-5xl md:text-7xl font-light tracking-tight">
+          图流 AI
+          <span className="block text-zinc-500 mt-2">AI 驱动的电商产品摄影</span>
+        </h1>
+        <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+          上传产品原图，自动完成视觉分析、智能抠图、场景重绘，一键生成专业级商业大片。
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+          <Link href={isLoggedIn ? '/generate' : '/register'}>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 h-12 text-base">
+              {isLoggedIn ? '进入工作台' : '免费试用'}
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </Link>
+          <Link href="/pricing">
+            <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800 px-8 h-12 text-base">
+              查看定价
+            </Button>
+          </Link>
+        </div>
+      </section>
 
-      <main className="max-w-3xl mx-auto px-4 py-12">
-        <Card className="bg-zinc-900 border-zinc-800 p-8 space-y-6">
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-zinc-100">上传产品原图</h2>
-            
-            {uploadedImage ? (
-              <div className="relative">
-                <img
-                  src={uploadedImage}
-                  alt="Uploaded product"
-                  className="w-full h-64 object-contain rounded-lg border border-zinc-700 bg-zinc-800"
-                />
-                {!loading && (
-                  <button
-                    onClick={() => { setUploadedImage(null); setJobId(null); setState(null); }}
-                    className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 p-1 rounded-full"
-                  >
-                    <X className="w-4 h-4 text-white" />
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-zinc-700 rounded-lg p-12 text-center cursor-pointer hover:border-zinc-600 transition-colors"
-              >
-                <Upload className="w-12 h-12 text-zinc-500 mx-auto mb-4" />
-                <p className="text-zinc-400">点击或拖拽上传产品照片</p>
-              </div>
-            )}
+      {/* Features Section */}
+      <section className="max-w-7xl mx-auto px-4 py-20">
+        <h2 className="text-center text-3xl font-light text-zinc-100 mb-12">核心功能</h2>
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            {
+              icon: <Eye className="w-8 h-8 text-blue-400" />,
+              title: '视觉分析',
+              desc: '基于腾讯混元视觉模型，精准识别产品特征，自动生成最优商拍描述。',
+            },
+            {
+              icon: <Scissors className="w-8 h-8 text-blue-400" />,
+              title: '智能抠图',
+              desc: '集成 Bria AI 专业抠图引擎，精确分离产品主体与背景，边缘细节完美保留。',
+            },
+            {
+              icon: <ImagePlay className="w-8 h-8 text-blue-400" />,
+              title: '场景重绘',
+              desc: '使用 Flux Fill 场景重绘技术，将产品无缝融入专业商拍场景，生成高质量大片。',
+            },
+          ].map((f) => (
+            <Card key={f.title} className="bg-zinc-900 border-zinc-800 p-8 space-y-4">
+              {f.icon}
+              <h3 className="text-xl font-semibold text-zinc-100">{f.title}</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed">{f.desc}</p>
+            </Card>
+          ))}
+        </div>
+      </section>
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-          </div>
-
-          <Button 
-            className="w-full bg-zinc-100 text-zinc-950 hover:bg-zinc-200 font-bold h-12" 
-            onClick={handleStart}
-            disabled={loading || !uploadedImage}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                正在处理流水线...
-              </>
-            ) : '开始生成电商大片'}
-          </Button>
-
-          {state && (
-            <div className="mt-8 p-6 bg-zinc-800/50 rounded-xl border border-zinc-700 space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {state.status === 'completed' ? (
-                    <CheckCircle2 className="w-5 h-5 text-green-500" />
-                  ) : state.status === 'failed' ? (
-                    <AlertCircle className="w-5 h-5 text-red-500" />
-                  ) : (
-                    <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
-                  )}
-                  <span className="font-medium capitalize">{state.status}</span>
-                </div>
-                <span className="text-zinc-400 text-sm">{state.progress}%</span>
-              </div>
-
-              <div className="w-full bg-zinc-700 rounded-full h-2">
-                <div 
-                  className="bg-blue-500 h-2 rounded-full transition-all duration-500" 
-                  style={{ width: `${state.progress}%` }}
-                ></div>
-              </div>
-
-                            {state.logs && state.logs.length > 0 && (
-                <div className="text-xs text-zinc-400 mt-4 pt-4 border-t border-zinc-700 space-y-1">
-                  <p className="font-medium text-zinc-300 mb-2">任务日志:</p>
-                  {state.logs.map((log, index) => (
-                    <p key={index} className="font-mono">{log}</p>
-                  ))}
-                </div>
+      {/* How it works */}
+      <section className="max-w-7xl mx-auto px-4 py-20">
+        <h2 className="text-center text-3xl font-light text-zinc-100 mb-12">使用流程</h2>
+        <div className="grid md:grid-cols-4 gap-4">
+          {[
+            { step: '01', title: '上传原图', desc: '上传您的产品照片（支持 JPG/PNG）' },
+            { step: '02', title: '智能分析', desc: '混元视觉自动识别产品特征' },
+            { step: '03', title: '精准抠图', desc: 'AI 自动分离产品主体' },
+            { step: '04', title: '生成大片', desc: '输出专业级商业摄影图' },
+          ].map((s, i) => (
+            <div key={s.step} className="relative flex flex-col items-center text-center p-6">
+              {i < 3 && (
+                <ArrowRight className="absolute right-0 top-8 w-5 h-5 text-zinc-600 hidden md:block" />
               )}
-
-              <div className="grid grid-cols-2 gap-4 text-xs text-zinc-500">
-                <div className={state.progress >= 20 ? "text-blue-400" : ""}>● 视觉分析</div>
-                <div className={state.progress >= 50 ? "text-blue-400" : ""}>● 智能抠图</div>
-                <div className={state.progress >= 80 ? "text-blue-400" : ""}>● 场景重绘</div>
-                <div className={state.progress >= 100 ? "text-blue-400" : ""}>● 任务完成</div>
+              <div className="w-12 h-12 rounded-full bg-blue-600/20 border border-blue-600/40 flex items-center justify-center text-blue-400 font-bold mb-4">
+                {s.step}
               </div>
-
-              {state.resultUrl && (
-                <div className="pt-4 border-t border-zinc-700">
-                  <p className="text-sm font-medium mb-3 text-zinc-300">生成结果：</p>
-                  <img src={state.resultUrl} alt="Result" className="w-full rounded-lg shadow-2xl border border-zinc-600" />
-                  <Button className="w-full mt-4 variant-outline" onClick={() => window.open(state.resultUrl)}>
-                    下载高清图
-                  </Button>
-                </div>
-              )}
-
-              {state.error && (
-                <div className="p-3 bg-red-900/20 border border-red-900/50 rounded text-red-400 text-sm">
-                  错误: {state.error}
-                </div>
-              )}
+              <h4 className="font-semibold text-zinc-100 mb-2">{s.title}</h4>
+              <p className="text-zinc-500 text-sm">{s.desc}</p>
             </div>
-          )}
-        </Card>
-      </main>
+          ))}
+        </div>
+      </section>
+
+      {/* Pricing Preview */}
+      <section className="max-w-7xl mx-auto px-4 py-20 text-center">
+        <h2 className="text-3xl font-light text-zinc-100 mb-4">透明定价</h2>
+        <p className="text-zinc-400 mb-8">注册即送 3 积分，每次生成消耗 1 积分</p>
+        <div className="flex flex-col sm:flex-row gap-6 justify-center mb-10">
+          {[
+            { name: '体验包', credits: '10 积分', price: '¥9.9' },
+            { name: '标准包', credits: '50 积分', price: '¥39.9', highlight: true },
+            { name: '专业包', credits: '200 积分', price: '¥99.9' },
+          ].map((p) => (
+            <Card
+              key={p.name}
+              className={`p-6 min-w-[160px] ${p.highlight ? 'bg-blue-950/50 border-blue-700' : 'bg-zinc-900 border-zinc-800'}`}
+            >
+              <p className="text-zinc-400 text-sm mb-1">{p.name}</p>
+              <p className="text-2xl font-bold text-zinc-100">{p.price}</p>
+              <p className="text-blue-400 text-sm mt-1">{p.credits}</p>
+            </Card>
+          ))}
+        </div>
+        <Link href="/pricing">
+          <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800">
+            查看完整定价方案 <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </Link>
+      </section>
     </div>
   );
 }
