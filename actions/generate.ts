@@ -44,7 +44,9 @@ export async function submitTask(userId: string, inputUrl: string, maskUrl: stri
 
 // 阶段 2: 状态轮询与自动同步
 export async function checkStatus(taskId: string) {
-  const gen = await prisma.generation.findUnique({ where: { id: taskId } });
+  const id = parseInt(taskId, 10);
+  if (isNaN(id)) return null;
+  const gen = await prisma.generation.findUnique({ where: { id } });
   if (!gen || gen.status === "COMPLETED" || gen.status === "FAILED") return gen;
 
   // 调用 Provider 查询接口

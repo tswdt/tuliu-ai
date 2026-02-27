@@ -1,5 +1,14 @@
 // Prisma schema for user authentication, credits, and subscriptions
 
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
 model User {
   id        Int     @id @default(autoincrement())
   email     String  @unique
@@ -17,4 +26,19 @@ model Subscription {
   endDate           DateTime
 
   user              User    @relation(fields: [userId], references: [id])
+}
+
+// 备用流程：异步任务状态（actions/generate 使用）
+model Generation {
+  id              Int      @id @default(autoincrement())
+  userId          String
+  inputUrl        String
+  maskUrl         String
+  prompt          String
+  providerTaskId  String
+  status          String   // PROCESSING | COMPLETED | FAILED
+  resultUrl       String?
+  error           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
