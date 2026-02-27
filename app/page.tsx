@@ -14,7 +14,15 @@ export default function Home() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [state, setState] = useState<JobState | null>(null);
   const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (data?.userId) setUserId(data.userId); })
+      .catch((err) => { console.error('Auth check failed:', err); });
+  }, []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -61,10 +69,10 @@ export default function Home() {
     setLoading(true);
     const id = `job_${Date.now()}`;
     setJobId(id);
-    
+
     try {
-      const userId = 'anonymous_user_1';
-      await startGeneration(id, cosImageUrl, userId);
+      const currentUserId = userId ?? 'anonymous';
+      await startGeneration(id, cosImageUrl, currentUserId);
     } catch (err) {
       toast.error("启动任务失败");
       setLoading(false);

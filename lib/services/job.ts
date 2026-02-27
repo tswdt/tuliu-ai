@@ -35,7 +35,6 @@ export async function updateJobState(
         id: jobId,
         status: 'pending',
         progress: 0,
-        updatedAt: new Date().toISOString(),
         ...current,
         ...updates,
         logs: [...(current?.logs || []), ...(updates.logs || [])],
