@@ -1,0 +1,314 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  GUEST
+  INDIVIDUAL
+  PROFESSIONAL
+  ENTERPRISE
+  ADMIN
+}
+
+enum SubscriptionType {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+  ONE_TIME
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum GenerationStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum Platform {
+  TAOBAO
+  TMALL
+  JD
+  PINDUODUO
+  DOUYIN
+  XIAOHONGSHU
+  AMAZON
+  TEMU
+  SHOPIFY
+  CUSTOM
+}
+
+enum ProductCategory {
+  CLOTHING
+  BEAUTY
+  ELECTRONICS
+  FOOD
+  HOME
+  OTHER
+}
+
+enum GenerationStyle {
+  SIMPLE
+  LUXURY
+  NATIONAL_TREND
+  TECH
+  NATURAL
+}
+
+enum Resolution {
+  TWO_K
+  FOUR_K
+}
+
+enum ImageType {
+  MAIN_IMAGE
+  SCENE_IMAGE
+  DETAIL_IMAGE
+  SELLING_POINT_IMAGE
+  DETAIL_PAGE
+}
+
+enum WorkflowStage {
+  PREPROCESSING
+  COPY_GENERATION
+  IMAGE_GENERATION
+  COMPOSITION
+  COMPLETED
+}
+
+// 用户表
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  phone         String?   @unique
+  name          String?
+  avatarUrl     String?
+  role          UserRole  @default(GUEST)
+  credits       Int       @default(0)
+  totalGenerations Int    @default(0)
+  stripeCustomerId String? @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // 关联关系
+  generations   Generation[]
+  orders        Order[]
+  subscriptions Subscription[]
+  apiKeys       ApiKey[]
+  quota         Quota?
+  activeGeneration ActiveGeneration?
+  mediaFolders  MediaFolder[]
+  mediaItems    MediaItem[]
+  
+  @@index([email])
+  @@index([phone])
+  @@index([role])
+}
+
+// 套餐配置表
+model Plan {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  price       Decimal   @db.Decimal(10, 2)
+  credits     Int       // 包含的生成次数
+  role        UserRole  // 对应的用户角色
+  type        SubscriptionType
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // 关联关系
+  orders      Order[]
+  subscriptions Subscription[]
+  
+  @@index([isActive])
+  @@index([role])
+}
+
+// 订单表
+model Order {
+  id            String         @id @default(cuid())
+  userId        String
+  planId        String?
+  amount        Decimal        @db.Decimal(10, 2)
+  status        PaymentStatus  @default(PENDING)
+  paymentMethod String?        // wechat, alipay, stripe
+  transactionId String?        @unique
+  description   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  // 关联关系
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan          Plan?          @relation(fields: [planId], references: [id])
+  
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// 订阅表
+model Subscription {
+  id          String           @id @default(cuid())
+  userId      String
+  planId      String
+  startDate   DateTime
+  endDate     DateTime?
+  status      String           @default("active") // active, cancelled, expired
+  autoRenew   Boolean          @default(true)
+  stripeSubscriptionId String? @unique
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  
+  // 关联关系
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan        Plan             @relation(fields: [planId], references: [id])
+  
+  @@index([userId])
+  @@index([status])
+}
+
+// API密钥表
+model ApiKey {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  keyHash   String   @unique
+  isActive  Boolean  @default(true)
+  lastUsed  DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // 关联关系
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([keyHash])
+}
+
+// AI生成记录表
+model Generation {
+  id                String           @id @default(cuid())
+  userId            String
+  status            GenerationStatus @default(QUEUED)
+  workflowStage     WorkflowStage?   @default(PREPROCESSING)
+  platform          Platform         @default(CUSTOM)
+  category          ProductCategory?
+  style             GenerationStyle?
+  resolution        Resolution?      @default(FOUR_K)
+  productName       String?
+  sellingPoints     String[]
+  prompt            String?
+  originalImageUrl  String?
+  whiteBgImageUrl   String?
+  resultUrls        String[]         // 生成的图片URL列表
+  copyContent       Json?            // 结构化文案内容
+  copyText          String?          // 生成的文案（纯文本）
+  mainImageUrl      String?
+  sceneImageUrls    String[]
+  detailImageUrls   String[]
+  sellingPointImageUrls String[]
+  detailPageUrl     String?
+  progress          Int              @default(0) // 0-100
+  creditUsed        Int              @default(1)
+  errorMessage      String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  
+  // 关联关系
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mediaItems        MediaItem[]
+  
+  @@index([userId])
+  @@index([status])
+  @@index([platform])
+  @@index([createdAt])
+}
+
+// 用户活跃生成任务表（用于并发控制）
+model ActiveGeneration {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  generationId String
+  createdAt DateTime @default(now())
+  
+  // 关联关系
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+// 额度记录表
+model Quota {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  total     Int      @default(0)
+  used      Int      @default(0)
+  remaining Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // 关联关系
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+// 素材分类表
+model MediaFolder {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  parentId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // 关联关系
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    MediaFolder?     @relation("FolderHierarchy", fields: [parentId], references: [id])
+  children  MediaFolder[]    @relation("FolderHierarchy")
+  items     MediaItem[]
+  
+  @@index([userId])
+  @@index([parentId])
+}
+
+// 素材项目表
+model MediaItem {
+  id          String     @id @default(cuid())
+  userId      String
+  folderId    String?
+  name        String
+  url         String
+  type        String     // image, video, etc.
+  imageType   ImageType? // 图片类型
+  size        Int?       // 文件大小（字节）
+  width       Int?
+  height      Int?
+  generationId String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  // 关联关系
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder      MediaFolder? @relation(fields: [folderId], references: [id])
+  generation  Generation?  @relation(fields: [generationId], references: [id])
+  
+  @@index([userId])
+  @@index([folderId])
+  @@index([generationId])
+  @@index([imageType])
+}
