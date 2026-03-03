@@ -41,32 +41,61 @@ export default function GenerateImagePage() {
   const [productName, setProductName] = useState("");
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [imageCount, setImageCount] = useState(4);
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [imageMD5, setImageMD5] = useState<string | null>(null);
   const [usedCache, setUsedCache] = useState(false);
 
-  async function calculateFileMD5(file: File): Promise<string> {
-    const arrayBuffer = await file.arrayBuffer();
-    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    return hashHex;
-  }
-
-  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      console.log("选择的文件:", file.name, file.type, file.size);
       setSelectedFile(file);
+      setError(null);
+      setIsUploading(true);
+      
       const reader = new FileReader();
-      reader.onload = async (e) => {
-        setImage(e.target?.result as string);
-        const md5 = await calculateFileMD5(file);
-        setImageMD5(md5);
+      reader.onload = (event) => {
+        console.log("FileReader加载完成");
+        const dataUrl = event.target?.result as string;
+        setImage(dataUrl);
+        console.log("图片预览设置成功");
+      };
+      reader.onerror = (error) => {
+        console.error("FileReader错误:", error);
+        setError("图片读取失败，请重试");
+        setIsUploading(false);
       };
       reader.readAsDataURL(file);
+
+      try {
+        const formData = new FormData();
+        formData.append("image", file);
+        
+        console.log("开始上传图片到服务器...");
+        const response = await fetch("/api/upload-image", {
+          method: "POST",
+          body: formData
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          console.log("图片上传成功:", result.imageUrl);
+          setUploadedImageUrl(result.imageUrl);
+          setImageMD5("md5-" + Date.now());
+        } else {
+          setError(result.error || "图片上传失败");
+        }
+      } catch (err) {
+        console.error("上传图片错误:", err);
+        setError("图片上传失败，请重试");
+      } finally {
+        setIsUploading(false);
+      }
     }
   }, []);
 
@@ -91,6 +120,13 @@ export default function GenerateImagePage() {
       return;
     }
 
+    console.log("[Node B] 前端开始调用生成接口");
+    console.log("[Node B] 商品名称:", productName);
+    console.log("[Node B] 用户提示词:", prompt);
+    console.log("[Node B] 接收到的原图 OSS URL:", uploadedImageUrl);
+    console.log("[Node B] 图片数量:", imageCount);
+    console.log("[Node B] 风格:", selectedStyle);
+
     setError(null);
     setUsedCache(false);
     setIsGenerating(true);
@@ -102,8 +138,10 @@ export default function GenerateImagePage() {
         selectedPlatform,
         imageCount,
         selectedStyle,
-        imageMD5 || undefined
+        uploadedImageUrl || undefined
       );
+
+      console.log("[Node B] 生成结果返回:", result.success ? "成功" : "失败");
 
       if (result.success && result.images) {
         setGeneratedImages(result.images);

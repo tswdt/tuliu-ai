@@ -6,6 +6,7 @@ export interface PromptAdapterOptions {
   platform?: string;
   additionalPrompt?: string;
   imageSize?: string;
+  hasReferenceImage?: boolean;
   visualAnalysis?: {
     category?: string;
     color?: string;
@@ -45,10 +46,17 @@ export function buildWanxiangPrompt(options: PromptAdapterOptions): {
     platform = "TAOBAO",
     additionalPrompt = "",
     imageSize = "800x800",
+    hasReferenceImage = false,
     visualAnalysis
   } = options;
 
-  logger.info("开始构建通义万相提示词", { productName, style, platform });
+  logger.info("开始构建电商生图提示词（图像为主模式）", { 
+    productName, 
+    style, 
+    platform,
+    hasReferenceImage,
+    additionalPrompt: additionalPrompt ? additionalPrompt.substring(0, 50) + '...' : '无'
+  });
 
   const styleDesc = STYLE_DESCRIPTIONS[style] || STYLE_DESCRIPTIONS.minimal;
   const platformOpt = PLATFORM_OPTIMIZATIONS[platform] || PLATFORM_OPTIMIZATIONS.TAOBAO;
@@ -65,13 +73,22 @@ export function buildWanxiangPrompt(options: PromptAdapterOptions): {
     }
   }
 
-  const prompt = `【${productName}】电商商品主图，商品：${productName}，这是一张${productName}的专业商品摄影图片，${styleDesc}，${platformOpt}${visualAnalysisPart}，${additionalPrompt ? additionalPrompt + '，' : ''}${imageSize}分辨率，4K超清细节，8K质感，商品主体居中突出，商用无版权，色彩还原真实，光影自然，无水印无文字，符合电商平台上架规范，必须是【${productName}】这个商品！`;
+  const productSubject = productName;
+  const userInput = additionalPrompt;
+  const userEnvironmentPrompt = userInput || "极简电商纯色背景，高级光影";
 
-  const negativePrompt = "模糊，变形，商品残缺，色差严重，水印，文字，色情，暴力，低分辨率，模糊边缘，杂乱背景，多余元素，人物，动物，其他商品，拼接痕迹，PS痕迹，噪点，过曝，欠曝，歪斜，比例失调，卡通风格，手绘风格，抽象风格，非商品图片";
+  const prompt = `【核心商品主体】：${productSubject}。
+【背景与场景要求】：${userEnvironmentPrompt}。
+【绝对指令】：商品必须是【${productSubject}】，请将它放置在【${userEnvironmentPrompt}】的环境中。无论背景描述是什么，核心商品主体绝对不能被替换或篡改！
 
-  logger.info("通义万相提示词构建完成", { 
+【摄影与渲染参数】：${styleDesc}，${platformOpt}${visualAnalysisPart}，${imageSize}分辨率，4K超清细节，商品主体居中突出，完整保留商品的形状、颜色、标签、包装、文字等所有特征，商用无版权，色彩还原真实，光影自然，无水印无文字，符合电商平台上架规范。`;
+
+  const negativePrompt = `模糊，变形，商品残缺，色差严重，水印，文字，色情，暴力，低分辨率，模糊边缘，杂乱背景，多余元素，人物，动物，其他商品，拼接痕迹，PS痕迹，噪点，过曝，欠曝，歪斜，比例失调，卡通风格，手绘风格，抽象风格，非商品图片，替换商品，错误的商品，修改商品主体，改变商品形状，改变商品颜色，不是【${productSubject}】的商品`;
+
+  logger.info("电商生图提示词构建完成", { 
     promptLength: prompt.length, 
-    negativePromptLength: negativePrompt.length 
+    negativePromptLength: negativePrompt.length,
+    mode: hasReferenceImage ? '图生图' : '文生图'
   });
 
   return { prompt, negativePrompt };
@@ -94,9 +111,17 @@ export function buildBackgroundReplacementPrompt(options: PromptAdapterOptions &
   const styleDesc = STYLE_DESCRIPTIONS[style] || STYLE_DESCRIPTIONS.minimal;
   const platformOpt = PLATFORM_OPTIMIZATIONS[platform] || PLATFORM_OPTIMIZATIONS.TAOBAO;
 
-  const prompt = `【${productName}】电商商品主图，商品：${productName}，${styleDesc}，${platformOpt}，背景：${backgroundDescription}，${additionalPrompt ? additionalPrompt + '，' : ''}4K超清细节，商品主体清晰完整，边缘过渡自然，光影协调，色彩真实，无水印无文字，商用无版权，符合电商平台上架规范，必须保留【${productName}】这个商品的完整性！`;
+  const subjectDescription = productName;
 
-  const negativePrompt = "模糊，变形，商品残缺，色差严重，水印，文字，色情，暴力，低分辨率，模糊边缘，商品被遮挡，商品被修改，拼接痕迹，边缘生硬，光影不自然，人物，动物，其他商品";
+  const prompt = `【核心商品主体】：${subjectDescription}。请确保该商品位于画面正中央，保持其原有材质、颜色和形状绝对不变。商品必须是【${subjectDescription}】，绝对不能替换或修改商品主体！
+
+【背景与场景要求】：${backgroundDescription}。请将核心商品放置在此类背景或环境中。
+
+【摄影与渲染参数】：${styleDesc}，${platformOpt}，4K超清细节，商品主体清晰完整，边缘过渡自然，光影协调，色彩真实，无水印无文字，商用无版权，符合电商平台上架规范。
+
+【绝对重点】：商品必须是【${subjectDescription}】，不能是其他商品！`;
+
+  const negativePrompt = "模糊，变形，商品残缺，色差严重，水印，文字，色情，暴力，低分辨率，模糊边缘，商品被遮挡，商品被修改，拼接痕迹，边缘生硬，光影不自然，人物，动物，其他商品，替换商品，改变商品形状，改变商品颜色";
 
   return { prompt, negativePrompt };
 }

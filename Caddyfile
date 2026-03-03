@@ -1,0 +1,72 @@
+{
+    http_port 80
+    https_port 443
+    auto_https off
+}
+
+# 本地开发配置 - HTTP 且不启用 HTTPS
+localhost:8080 {
+    log {
+        output stdout
+        format json
+    }
+
+    # 启用 HTTP/3
+    experimental_http3
+
+    # 反向代理到 Next.js 应用
+    reverse_proxy app:3000 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+        
+        # 健康检查
+        health_timeout 5s
+        health_interval 30s
+        health_path /
+    }
+
+    # 静态文件缓存
+    @static {
+        path /_next/*
+        path /static/*
+        path /favicon.ico
+    }
+    
+    header @static Cache-Control "public, max-age=31536000, immutable"
+    
+    # 安全头
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}
+
+# 生产环境配置模板（需要域名和 HTTPS）
+# your-domain.com {
+#     log {
+#         output stdout
+#         format json
+#     }
+#
+#     # 自动 HTTPS + HTTP/3
+#     experimental_http3
+#
+#     reverse_proxy app:3000 {
+#         header_up X-Real-IP {remote_host}
+#         header_up X-Forwarded-For {remote_host}
+#         header_up X-Forwarded-Proto {scheme}
+#     }
+#
+#     # 安全头
+#     header {
+#         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+#         X-Content-Type-Options "nosniff"
+#         X-Frame-Options "DENY"
+#         X-XSS-Protection "1; mode=block"
+#         Content-Security-Policy "default-src 'self'"
+#         Referrer-Policy "strict-origin-when-cross-origin"
+#     }
+# }

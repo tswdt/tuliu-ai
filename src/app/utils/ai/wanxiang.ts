@@ -44,14 +44,14 @@ export async function generateImageWithWanxiang(
 
   try {
     logger.info(`[${WANXIANG_CONFIG.name}] 调用通义万相...`, { 
-      prompt, 
+      prompt: prompt.substring(0, 100) + "...", 
       model: WANXIANG_CONFIG.model, 
       originalSize: imageSize,
       mappedSize: allowedSize
     });
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const timeoutId = setTimeout(() => controller.abort(), 180000);
     
     try {
       const requestBody = {
@@ -67,7 +67,10 @@ export async function generateImageWithWanxiang(
         }
       };
 
-      logger.info(`${WANXIANG_CONFIG.name}请求参数`, requestBody);
+      logger.info(`${WANXIANG_CONFIG.name}请求参数`, { 
+        model: requestBody.model,
+        size: requestBody.parameters.size 
+      });
 
       const response = await fetch(WANXIANG_CONFIG.url, {
         method: "POST",
@@ -104,17 +107,16 @@ export async function generateImageWithWanxiang(
       }
 
       const responseText = await response.text();
-      logger.info(`${WANXIANG_CONFIG.name}成功响应内容`, { responseText });
-
+      
       let data;
       try {
         data = JSON.parse(responseText);
       } catch (e) {
-        logger.error("响应不是有效的JSON", { responseText });
+        logger.error("响应不是有效的JSON", { responseText: responseText.substring(0, 200) });
         throw new Error(`${WANXIANG_CONFIG.name}返回无效的JSON响应`);
       }
 
-      logger.info("解析后的响应数据", data);
+      logger.info("解析后的响应数据", { code: data.code, task_id: data.output?.task_id });
 
       if (data.code && data.code !== 'Success') {
         throw new Error(`${WANXIANG_CONFIG.name}调用失败：${data.message || data.code}`);
@@ -129,60 +131,75 @@ export async function generateImageWithWanxiang(
       logger.info(`开始轮询任务状态，task_id: ${taskId}`);
       const imageUrl = await pollTaskStatus(taskId);
 
-      logger.info(`✅ [${WANXIANG_CONFIG.name}] 调用成功 → ${imageUrl}`);
+      logger.info(`✅ [${WANXIANG_CONFIG.name}] 调用成功 → ${imageUrl.substring(0, 50)}...`);
       return imageUrl;
     } finally {
       clearTimeout(timeoutId);
     }
 
   } catch (error) {
-    logger.error(`❌ [${WANXIANG_CONFIG.name}] 调用失败`, { error });
+    logger.error(`❌ [${WANXIANG_CONFIG.name}] 调用失败`, { error: (error as Error).message });
     throw error;
   }
 }
 
 async function pollTaskStatus(taskId: string): Promise<string> {
-  const maxPolls = 60;
-  const pollInterval = 2000;
+  const maxPolls = 90;
+  const pollInterval = 3000;
 
   for (let i = 0; i < maxPolls; i++) {
     logger.info(`轮询任务状态 ${i + 1}/${maxPolls}`);
     
-    const response = await fetch(`https://dashscope.aliyuncs.com/api/v1/tasks/${taskId}`, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${WANXIANG_CONFIG.key}`
+    try {
+      const response = await fetch(`https://dashscope.aliyuncs.com/api/v1/tasks/${taskId}`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${WANXIANG_CONFIG.key}`
+        }
+      });
+
+      if (!response.ok) {
+        logger.warn(`任务查询响应失败: ${response.status}`);
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+        continue;
       }
-    });
 
-    const data = await response.json();
-    logger.info("任务状态响应", data);
-
-    if (data.code && data.code !== 'Success') {
-      throw new Error(`任务查询失败：${data.message || data.code}`);
-    }
-
-    const taskStatus = data.output?.task_status;
-    logger.info(`任务状态: ${taskStatus}`);
-
-    if (taskStatus === 'SUCCEEDED') {
-      const imageUrl = data.output?.results?.[0]?.url;
-      if (imageUrl) {
-        return imageUrl;
+      const data = await response.json();
+      
+      if (data.code && data.code !== 'Success') {
+        logger.warn(`任务查询返回错误: ${data.code} - ${data.message}`);
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+        continue;
       }
-      throw new Error("任务成功但未找到图片URL");
-    }
 
-    if (taskStatus === 'FAILED') {
-      throw new Error(`任务失败：${data.output?.message || '未知错误'}`);
-    }
+      const taskStatus = data.output?.task_status;
+      logger.info(`任务状态: ${taskStatus}`);
 
-    if (taskStatus !== 'PENDING' && taskStatus !== 'RUNNING') {
-      throw new Error(`未知任务状态：${taskStatus}`);
+      if (taskStatus === 'SUCCEEDED') {
+        const imageUrl = data.output?.results?.[0]?.url;
+        if (imageUrl) {
+          return imageUrl;
+        }
+        logger.error("任务成功但未找到图片URL", { data });
+        throw new Error("任务成功但未找到图片URL");
+      }
+
+      if (taskStatus === 'FAILED') {
+        const errorMsg = data.output?.message || '未知错误';
+        logger.error("任务失败", { errorMsg, data });
+        throw new Error(`任务失败：${errorMsg}`);
+      }
+
+      if (taskStatus !== 'PENDING' && taskStatus !== 'RUNNING' && taskStatus !== 'SUSPENDED') {
+        logger.warn(`未知任务状态：${taskStatus}，继续轮询`);
+      }
+
+    } catch (error) {
+      logger.error(`轮询异常（第${i + 1}次）`, { error: (error as Error).message });
     }
 
     await new Promise(resolve => setTimeout(resolve, pollInterval));
   }
 
-  throw new Error("任务超时，请重试");
+  throw new Error("任务超时，请重试（最长等待时间：4.5分钟）");
 }
