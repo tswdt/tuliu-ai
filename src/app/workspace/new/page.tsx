@@ -42,6 +42,21 @@ import {
   Award,
   TrendingUp,
   Minus,
+  Languages,
+  Hash,
+  Maximize2,
+  Crown,
+  Scale,
+  Flame,
+  Gift,
+  FileText,
+  ListChecks,
+  Target,
+  Megaphone,
+  Scissors,
+  Eraser,
+  Copy,
+  Monitor,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -56,6 +71,13 @@ const STEPS = [
   "选择平台",
   "选择生成内容",
   "选择风格",
+  "语言选择",
+  "张数选择",
+  "尺寸/比例",
+  "价格定位",
+  "文案强度",
+  "输出质量",
+  "后期处理",
   "生成",
 ];
 
@@ -100,6 +122,61 @@ const styles = [
   { id: "amazon-a", label: "亚马逊 A+ 简洁风", desc: "白底为主、图文清晰、信息直白", color: "from-gray-50 to-white" },
 ];
 
+const languages = [
+  { id: "zh-CN", label: "中文简体", flag: "🇨🇳" },
+  { id: "zh-TW", label: "中文繁体", flag: "🇹🇼" },
+  { id: "en", label: "English", flag: "🇺🇸" },
+  { id: "ja", label: "日本語", flag: "🇯🇵" },
+  { id: "ko", label: "한국어", flag: "🇰🇷" },
+  { id: "de", label: "Deutsch", flag: "🇩🇪" },
+  { id: "fr", label: "Français", flag: "🇫🇷" },
+  { id: "es", label: "Español", flag: "🇪🇸" },
+  { id: "ru", label: "Русский", flag: "🇷🇺" },
+];
+
+const sizeOptions = [
+  { id: "1:1", label: "1:1 商品主图", desc: "800×800px", w: 800, h: 800 },
+  { id: "3:4", label: "3:4 竖版详情图", desc: "600×800px", w: 600, h: 800 },
+  { id: "4:5", label: "4:5 电商图", desc: "640×800px", w: 640, h: 800 },
+  { id: "9:16", label: "9:16 抖音竖图", desc: "450×800px", w: 450, h: 800 },
+  { id: "750px", label: "750px 淘宝详情页", desc: "750×自适应", w: 750, h: 0 },
+  { id: "800px", label: "800px 京东详情页", desc: "800×自适应", w: 800, h: 0 },
+  { id: "amazon-a+", label: "亚马逊 A+ 模块", desc: "970×600px", w: 970, h: 600 },
+];
+
+const pricePositions = [
+  { id: "premium", label: "高端品质", desc: "强调品质、工艺、品牌价值", icon: Crown },
+  { id: "mid", label: "中端实用", desc: "平衡品质与价格，突出实用性", icon: Scale },
+  { id: "value", label: "性价比", desc: "突出高性价比、超值优惠", icon: TrendingUp },
+  { id: "promo", label: "促销爆款", desc: "限时优惠、热卖爆款", icon: Flame },
+  { id: "gift", label: "礼品款", desc: "精美包装、送礼首选", icon: Gift },
+];
+
+const copyIntensities = [
+  { id: "restrained", label: "克制专业", desc: "简洁专业，少营销语言", icon: FileText },
+  { id: "selling", label: "卖点清晰", desc: "核心卖点突出，信息明确", icon: ListChecks },
+  { id: "conversion", label: "强转化", desc: "引导下单，紧迫感强", icon: Target },
+  { id: "promo", label: "促销导向", desc: "价格优惠、限时抢购", icon: Megaphone },
+  { id: "spec", label: "参数说明型", desc: "详细参数，技术规格为主", icon: Ruler },
+];
+
+const qualityOptions = [
+  { id: "standard", label: "标准图", desc: "1024×1024，适合预览", cost: 0 },
+  { id: "hd", label: "高清图", desc: "2048×2048，适合展示", cost: 1 },
+  { id: "2k", label: "2K", desc: "2560×2560，适合印刷", cost: 2 },
+  { id: "4k", label: "4K", desc: "4096×4096，适合大图", cost: 3 },
+  { id: "no-watermark", label: "无水印", desc: "去除水印，可商用", cost: 1 },
+];
+
+const postProcessingOptions = [
+  { id: "cutout", label: "自动抠图", desc: "智能去除背景", icon: Scissors },
+  { id: "white-bg", label: "白底图", desc: "替换为纯白背景", icon: Square },
+  { id: "change-bg", label: "产品换背景", desc: "更换场景背景", icon: Maximize2 },
+  { id: "fix", label: "瑕疵修复", desc: "修复产品表面瑕疵", icon: Eraser },
+  { id: "upscale", label: "高清放大", desc: "无损放大图片", icon: Monitor },
+  { id: "consistent", label: "保持主体一致", desc: "多图主体风格统一", icon: Copy },
+];
+
 const mockRecognition = {
   productType: "休闲T恤",
   productName: "纯棉圆领短袖T恤",
@@ -131,6 +208,18 @@ export default function NewProjectPage() {
   const [selectedPlatform, setSelectedPlatform] = useState("");
   const [selectedContents, setSelectedContents] = useState<string[]>(["main", "scene", "detail", "selling", "long"]);
   const [selectedStyle, setSelectedStyle] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState("zh-CN");
+  const [quantitySettings, setQuantitySettings] = useState({
+    mainImages: 1,
+    subImages: 3,
+    detailImages: 3,
+    detailModules: 5,
+  });
+  const [selectedSize, setSelectedSize] = useState("1:1");
+  const [selectedPricePosition, setSelectedPricePosition] = useState("mid");
+  const [selectedCopyIntensity, setSelectedCopyIntensity] = useState("selling");
+  const [selectedQuality, setSelectedQuality] = useState("standard");
+  const [selectedPostProcessing, setSelectedPostProcessing] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentProgress, setCurrentProgress] = useState(0);
   const [formData, setFormData] = useState({
@@ -180,6 +269,14 @@ export default function NewProjectPage() {
     );
   };
 
+  const getModuleStep = (current: number) => {
+    const steps = [3, 5, 8, 12];
+    const idx = steps.indexOf(current);
+    if (idx >= 0 && idx < steps.length - 1) return steps[idx + 1] - steps[idx];
+    const nextStep = steps.find((s) => s > current);
+    return nextStep ? nextStep - current : 1;
+  };
+
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
     await new Promise((r) => setTimeout(r, 2000));
@@ -216,6 +313,13 @@ export default function NewProjectPage() {
       case 5: return !!selectedPlatform;
       case 6: return selectedContents.length > 0;
       case 7: return !!selectedStyle;
+      case 8: return !!selectedLanguage;
+      case 9: return true;
+      case 10: return !!selectedSize;
+      case 11: return !!selectedPricePosition;
+      case 12: return !!selectedCopyIntensity;
+      case 13: return !!selectedQuality;
+      case 14: return true;
       default: return false;
     }
   };
@@ -228,12 +332,12 @@ export default function NewProjectPage() {
       </div>
 
       <div className="mb-8">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 overflow-x-auto pb-2">
           {STEPS.map((s, i) => (
-            <div key={i} className="flex items-center">
-              <div className="flex items-center gap-1.5">
+            <div key={i} className="flex items-center flex-shrink-0">
+              <div className="flex items-center gap-1">
                 <div
-                  className={`h-6 w-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-colors ${
+                  className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
                     step > i + 1
                       ? "bg-violet-600 text-white"
                       : step === i + 1
@@ -241,10 +345,10 @@ export default function NewProjectPage() {
                       : "bg-gray-100 text-gray-400"
                   }`}
                 >
-                  {step > i + 1 ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
+                  {step > i + 1 ? <CheckCircle2 className="h-3 w-3" /> : i + 1}
                 </div>
                 <span
-                  className={`text-xs hidden lg:inline transition-colors ${
+                  className={`text-[10px] hidden xl:inline transition-colors whitespace-nowrap ${
                     step === i + 1 ? "text-violet-600 font-medium" : "text-gray-400"
                   }`}
                 >
@@ -252,7 +356,7 @@ export default function NewProjectPage() {
                 </span>
               </div>
               {i < STEPS.length - 1 && (
-                <div className={`h-px w-4 lg:w-8 mx-1 ${step > i + 1 ? "bg-violet-300" : "bg-gray-200"}`} />
+                <div className={`h-px w-2 xl:w-4 mx-0.5 ${step > i + 1 ? "bg-violet-300" : "bg-gray-200"}`} />
               )}
             </div>
           ))}
@@ -695,6 +799,294 @@ export default function NewProjectPage() {
         {step === 8 && (
           <div className="space-y-6">
             <div>
+              <h2 className="text-base font-semibold text-gray-900 mb-1">语言选择</h2>
+              <p className="text-sm text-gray-500">选择生成内容的语言</p>
+            </div>
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+              {languages.map((lang) => {
+                const active = selectedLanguage === lang.id;
+                return (
+                  <Card
+                    key={lang.id}
+                    className={`cursor-pointer transition-all ${
+                      active
+                        ? "border-2 border-violet-500 shadow-md shadow-violet-100"
+                        : "border hover:border-violet-200 hover:shadow-sm"
+                    }`}
+                    onClick={() => setSelectedLanguage(lang.id)}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <div className="text-2xl mb-2">{lang.flag}</div>
+                      <h3 className="text-sm font-medium text-gray-900">{lang.label}</h3>
+                      {active && (
+                        <div className="mt-2">
+                          <CheckCircle2 className="h-4 w-4 text-violet-600 mx-auto" />
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {step === 9 && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900 mb-1">张数选择</h2>
+              <p className="text-sm text-gray-500">设置各类图片的生成数量</p>
+            </div>
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-5 space-y-6">
+                {[
+                  { key: "mainImages" as const, label: "主图张数", min: 1, max: 4, desc: "商品展示主图" },
+                  { key: "subImages" as const, label: "附图张数", min: 1, max: 6, desc: "多角度展示图" },
+                  { key: "detailImages" as const, label: "细节图张数", min: 1, max: 6, desc: "局部细节放大" },
+                  { key: "detailModules" as const, label: "详情页模块数", min: 3, max: 12, desc: "详情页内容模块", isModule: true },
+                ].map((item) => (
+                  <div key={item.key} className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900">{item.label}</h3>
+                      <p className="text-xs text-gray-400">{item.desc}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() =>
+                          setQuantitySettings((prev) => ({
+                            ...prev,
+                            [item.key]: Math.max(item.min, prev[item.key] - (item.isModule ? getModuleStep(prev[item.key]) : 1)),
+                          }))
+                        }
+                        disabled={quantitySettings[item.key] <= item.min}
+                        className="h-8 w-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                      </button>
+                      <span className="text-lg font-semibold text-gray-900 w-8 text-center">
+                        {quantitySettings[item.key]}
+                      </span>
+                      <button
+                        onClick={() =>
+                          setQuantitySettings((prev) => ({
+                            ...prev,
+                            [item.key]: Math.min(item.max, prev[item.key] + (item.isModule ? getModuleStep(prev[item.key]) : 1)),
+                          }))
+                        }
+                        disabled={quantitySettings[item.key] >= item.max}
+                        className="h-8 w-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {step === 10 && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900 mb-1">尺寸/比例选择</h2>
+              <p className="text-sm text-gray-500">选择输出图片的尺寸和比例</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {sizeOptions.map((size) => {
+                const active = selectedSize === size.id;
+                return (
+                  <Card
+                    key={size.id}
+                    className={`cursor-pointer transition-all ${
+                      active
+                        ? "border-2 border-violet-500 shadow-md shadow-violet-100"
+                        : "border hover:border-violet-200 hover:shadow-sm"
+                    }`}
+                    onClick={() => setSelectedSize(size.id)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-center mb-3">
+                        <div
+                          className={`border-2 rounded ${active ? "border-violet-400 bg-violet-50" : "border-gray-300 bg-gray-50"}`}
+                          style={{
+                            width: `${Math.min(48, (size.w / Math.max(size.w, size.h || size.w)) * 48)}px`,
+                            height: `${Math.min(48, (size.h || size.w) / Math.max(size.w, size.h || size.w) * 48)}px`,
+                          }}
+                        />
+                      </div>
+                      <h3 className="text-sm font-medium text-gray-900 text-center">
+                        {size.label}
+                        {active && <CheckCircle2 className="h-3.5 w-3.5 text-violet-600 inline ml-1" />}
+                      </h3>
+                      <p className="text-xs text-gray-400 text-center mt-0.5">{size.desc}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {step === 11 && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900 mb-1">价格定位选择</h2>
+              <p className="text-sm text-gray-500">选择产品的价格定位，影响文案和视觉风格</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+              {pricePositions.map((pos) => {
+                const Icon = pos.icon;
+                const active = selectedPricePosition === pos.id;
+                return (
+                  <Card
+                    key={pos.id}
+                    className={`cursor-pointer transition-all ${
+                      active
+                        ? "border-2 border-violet-500 shadow-md shadow-violet-100"
+                        : "border hover:border-violet-200 hover:shadow-sm"
+                    }`}
+                    onClick={() => setSelectedPricePosition(pos.id)}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <div className={`h-10 w-10 rounded-lg mx-auto mb-2 flex items-center justify-center ${
+                        active ? "bg-violet-100" : "bg-gray-100"
+                      }`}>
+                        <Icon className={`h-5 w-5 ${active ? "text-violet-600" : "text-gray-500"}`} />
+                      </div>
+                      <h3 className="text-sm font-medium text-gray-900">{pos.label}</h3>
+                      <p className="text-xs text-gray-400 mt-0.5">{pos.desc}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {step === 12 && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900 mb-1">文案强度选择</h2>
+              <p className="text-sm text-gray-500">选择文案的营销力度和风格</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+              {copyIntensities.map((ci) => {
+                const Icon = ci.icon;
+                const active = selectedCopyIntensity === ci.id;
+                return (
+                  <Card
+                    key={ci.id}
+                    className={`cursor-pointer transition-all ${
+                      active
+                        ? "border-2 border-violet-500 shadow-md shadow-violet-100"
+                        : "border hover:border-violet-200 hover:shadow-sm"
+                    }`}
+                    onClick={() => setSelectedCopyIntensity(ci.id)}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <div className={`h-10 w-10 rounded-lg mx-auto mb-2 flex items-center justify-center ${
+                        active ? "bg-violet-100" : "bg-gray-100"
+                      }`}>
+                        <Icon className={`h-5 w-5 ${active ? "text-violet-600" : "text-gray-500"}`} />
+                      </div>
+                      <h3 className="text-sm font-medium text-gray-900">{ci.label}</h3>
+                      <p className="text-xs text-gray-400 mt-0.5">{ci.desc}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {step === 13 && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900 mb-1">输出质量选择</h2>
+              <p className="text-sm text-gray-500">更高质量需要更多积分</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+              {qualityOptions.map((q) => {
+                const active = selectedQuality === q.id;
+                return (
+                  <Card
+                    key={q.id}
+                    className={`cursor-pointer transition-all ${
+                      active
+                        ? "border-2 border-violet-500 shadow-md shadow-violet-100"
+                        : "border hover:border-violet-200 hover:shadow-sm"
+                    }`}
+                    onClick={() => setSelectedQuality(q.id)}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <div className={`h-10 w-10 rounded-lg mx-auto mb-2 flex items-center justify-center ${
+                        active ? "bg-violet-100" : "bg-gray-100"
+                      }`}>
+                        <Monitor className={`h-5 w-5 ${active ? "text-violet-600" : "text-gray-500"}`} />
+                      </div>
+                      <h3 className="text-sm font-medium text-gray-900">{q.label}</h3>
+                      <p className="text-xs text-gray-400 mt-0.5">{q.desc}</p>
+                      <span className={`inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full ${
+                        q.cost === 0 ? "bg-green-50 text-green-600" : "bg-amber-50 text-amber-600"
+                      }`}>
+                        {q.cost === 0 ? "免费" : `+${q.cost} 积分`}
+                      </span>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {step === 14 && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900 mb-1">后期处理选项</h2>
+              <p className="text-sm text-gray-500">可多选，选择需要的后期处理效果</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {postProcessingOptions.map((pp) => {
+                const Icon = pp.icon;
+                const active = selectedPostProcessing.includes(pp.id);
+                return (
+                  <Card
+                    key={pp.id}
+                    className={`cursor-pointer transition-all ${
+                      active
+                        ? "border-2 border-violet-500 shadow-md shadow-violet-100"
+                        : "border hover:border-violet-200 hover:shadow-sm"
+                    }`}
+                    onClick={() =>
+                      setSelectedPostProcessing((prev) =>
+                        prev.includes(pp.id) ? prev.filter((p) => p !== pp.id) : [...prev, pp.id]
+                      )
+                    }
+                  >
+                    <CardContent className="p-4 text-center">
+                      <div className={`h-10 w-10 rounded-lg mx-auto mb-2 flex items-center justify-center ${
+                        active ? "bg-violet-100" : "bg-gray-100"
+                      }`}>
+                        {active ? (
+                          <CheckCircle2 className="h-5 w-5 text-violet-600" />
+                        ) : (
+                          <Icon className="h-5 w-5 text-gray-500" />
+                        )}
+                      </div>
+                      <h3 className="text-sm font-medium text-gray-900">{pp.label}</h3>
+                      <p className="text-xs text-gray-400 mt-0.5">{pp.desc}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {step === 15 && (
+          <div className="space-y-6">
+            <div>
               <h2 className="text-base font-semibold text-gray-900 mb-1">生成中</h2>
               <p className="text-sm text-gray-500">AI 正在为你生成电商视觉素材</p>
             </div>
@@ -746,7 +1138,7 @@ export default function NewProjectPage() {
           上一步
         </Button>
 
-        {step < 8 ? (
+        {step < 15 ? (
           <Button
             onClick={() => {
               if (step === 2 && images.length > 0) {
