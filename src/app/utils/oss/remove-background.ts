@@ -8,13 +8,19 @@ const ALIYUN_OSS_BUCKET = process.env.ALIYUN_OSS_BUCKET;
 const ALIYUN_OSS_REGION = process.env.ALIYUN_OSS_REGION;
 const ALIYUN_VISION_REGION = process.env.ALIYUN_VISION_REGION || 'cn-shanghai';
 
-// 初始化OSS客户端
-const ossClient = new OSS({
-  region: ALIYUN_OSS_REGION || 'oss-cn-shanghai',
-  accessKeyId: ALIYUN_ACCESS_KEY_ID || '',
-  accessKeySecret: ALIYUN_ACCESS_KEY_SECRET || '',
-  bucket: ALIYUN_OSS_BUCKET || '',
-});
+let _ossClient: InstanceType<typeof OSS> | null = null;
+
+function getOssClient(): InstanceType<typeof OSS> {
+  if (!_ossClient) {
+    _ossClient = new OSS({
+      region: ALIYUN_OSS_REGION || 'oss-cn-shanghai',
+      accessKeyId: ALIYUN_ACCESS_KEY_ID || '',
+      accessKeySecret: ALIYUN_ACCESS_KEY_SECRET || '',
+      bucket: ALIYUN_OSS_BUCKET || '',
+    });
+  }
+  return _ossClient;
+}
 
 /**
  * 阿里云通用物体抠图（适配全品类商品）
@@ -53,10 +59,9 @@ export async function removeProductBackground(imageUrl: string): Promise<string>
     const cutoutFileName = `cutout/${Date.now()}-${Math.random().toString(36).substring(2, 10)}.png`;
     const response = await fetch(cutoutImageUrl);
     const buffer = await response.arrayBuffer();
-    await ossClient.put(cutoutFileName, Buffer.from(buffer));
+    await getOssClient().put(cutoutFileName, Buffer.from(buffer));
 
-    // 3. 生成OSS访问URL
-    const ossCutoutUrl = ossClient.signatureUrl(cutoutFileName, { expires: 3600 * 24 * 7 });
+    const ossCutoutUrl = getOssClient().signatureUrl(cutoutFileName, { expires: 3600 * 24 * 7 });
     logger.info("商品图抠图并上传OSS成功", { originalUrl: imageUrl, cutoutUrl: ossCutoutUrl });
     return ossCutoutUrl;
 

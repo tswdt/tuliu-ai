@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { UserRole } from "@prisma/client";
 
 // 创建新用户
 export async function POST(request: Request) {
@@ -30,7 +29,7 @@ export async function POST(request: Request) {
         phone,
         name,
         avatarUrl,
-        role: UserRole.INDIVIDUAL,
+        role: "INDIVIDUAL",
         credits: freeCredits,
       },
     });

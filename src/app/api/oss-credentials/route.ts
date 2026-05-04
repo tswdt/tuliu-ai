@@ -40,12 +40,11 @@ export async function POST(request: Request) {
     });
 
     const credentials = {
-      accessKeyId: result.accessKeyId,
+      accessKeyId: result.OSSAccessKeyId,
       policy: result.policy,
-      signature: result.signature,
+      signature: result.Signature,
       key: fileName,
       host: `https://${ALIYUN_OSS_BUCKET}.${ALIYUN_OSS_REGION}.aliyuncs.com`,
-      expiration: result.expiration
     };
 
     logger.info('OSS直传凭证生成成功', { fileName });

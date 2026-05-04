@@ -59,7 +59,17 @@ class MockRedis {
   }
 
   async subscribe(channel: string): Promise<void> {
-    
+
+  }
+
+  async unsubscribe(channel: string): Promise<void> {
+
+  }
+
+  async keys(pattern: string): Promise<string[]> {
+    if (pattern === '*') return Array.from(this.memoryStore.keys());
+    const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
+    return Array.from(this.memoryStore.keys()).filter(k => regex.test(k));
   }
 
   on(event: string, callback: (...args: any[]) => void): this {
@@ -79,6 +89,16 @@ let mockRedisClient: MockRedis | null = null;
 
 export function getRedisClient(): Redis | MockRedis {
   if (redisDisabled) {
+    if (!mockRedisClient) {
+      mockRedisClient = new MockRedis();
+    }
+    return mockRedisClient;
+  }
+
+  const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' || !process.env.REDIS_URL;
+
+  if (isBuildTime) {
+    redisDisabled = true;
     if (!mockRedisClient) {
       mockRedisClient = new MockRedis();
     }

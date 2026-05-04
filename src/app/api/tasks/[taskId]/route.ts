@@ -4,10 +4,10 @@ import { logger } from '@/app/utils/logger';
 
 export async function GET(
   request: Request,
-  { params }: { params: { taskId: string } }
+  { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
-    const taskId = params.taskId;
+    const { taskId } = await params;
     const task = await taskQueue.getTask(taskId);
 
     if (!task) {

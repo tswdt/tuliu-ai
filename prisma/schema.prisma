@@ -3,105 +3,31 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  GUEST
-  INDIVIDUAL
-  PROFESSIONAL
-  ENTERPRISE
-  ADMIN
-}
-
-enum SubscriptionType {
-  MONTHLY
-  QUARTERLY
-  YEARLY
-  ONE_TIME
-}
-
-enum PaymentStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  REFUNDED
-}
-
-enum GenerationStatus {
-  QUEUED
-  PROCESSING
-  COMPLETED
-  FAILED
-}
-
-enum Platform {
-  TAOBAO
-  TMALL
-  JD
-  PINDUODUO
-  DOUYIN
-  XIAOHONGSHU
-  AMAZON
-  TEMU
-  SHOPIFY
-  CUSTOM
-}
-
-enum ProductCategory {
-  CLOTHING
-  BEAUTY
-  ELECTRONICS
-  FOOD
-  HOME
-  OTHER
-}
-
-enum GenerationStyle {
-  SIMPLE
-  LUXURY
-  NATIONAL_TREND
-  TECH
-  NATURAL
-}
-
-enum Resolution {
-  TWO_K
-  FOUR_K
-}
-
-enum ImageType {
-  MAIN_IMAGE
-  SCENE_IMAGE
-  DETAIL_IMAGE
-  SELLING_POINT_IMAGE
-  DETAIL_PAGE
-}
-
-enum WorkflowStage {
-  PREPROCESSING
-  COPY_GENERATION
-  IMAGE_GENERATION
-  COMPOSITION
-  COMPLETED
-}
-
-// 用户表
 model User {
-  id            String    @id @default(cuid())
-  email         String?   @unique
-  phone         String?   @unique
+  id            String   @id @default(cuid())
+  email         String?  @unique
+  phone         String?  @unique
+  passwordHash  String?
   name          String?
   avatarUrl     String?
-  role          UserRole  @default(GUEST)
-  credits       Int       @default(0)
-  totalGenerations Int    @default(0)
+  role          String   @default("INDIVIDUAL")
+  credits       Int      @default(10)
+  totalGenerations Int   @default(0)
+  wechatOpenId  String?  @unique
+  wechatUnionId String?
+  emailVerified Boolean  @default(false)
+  phoneVerified Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  lastLoginAt   DateTime?
+  onboardingCompleted Boolean @default(false)
   stripeCustomerId String? @unique
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  // 关联关系
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
   generations   Generation[]
   orders        Order[]
   subscriptions Subscription[]
@@ -110,148 +36,251 @@ model User {
   activeGeneration ActiveGeneration?
   mediaFolders  MediaFolder[]
   mediaItems    MediaItem[]
-  
+  projects      Project[]
+  creditLogs    CreditLog[]
+  passwordResets PasswordReset[]
+
   @@index([email])
   @@index([phone])
   @@index([role])
+  @@index([wechatOpenId])
 }
 
-// 套餐配置表
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
 model Plan {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
   description String?
-  price       Decimal   @db.Decimal(10, 2)
-  credits     Int       // 包含的生成次数
-  role        UserRole  // 对应的用户角色
-  type        SubscriptionType
-  isActive    Boolean   @default(true)
-  sortOrder   Int       @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  // 关联关系
+  price       Float
+  credits     Int
+  role        String
+  type        String
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  features    String   @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   orders      Order[]
   subscriptions Subscription[]
-  
+
   @@index([isActive])
   @@index([role])
 }
 
-// 订单表
 model Order {
-  id            String         @id @default(cuid())
+  id            String    @id @default(cuid())
   userId        String
   planId        String?
-  amount        Decimal        @db.Decimal(10, 2)
-  status        PaymentStatus  @default(PENDING)
-  paymentMethod String?        // wechat, alipay, stripe
-  transactionId String?        @unique
+  amount        Float
+  status        String    @default("PENDING")
+  paymentMethod String?
+  transactionId String?   @unique
   description   String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  
-  // 关联关系
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan          Plan?          @relation(fields: [planId], references: [id])
-  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan          Plan?     @relation(fields: [planId], references: [id])
+
   @@index([userId])
   @@index([status])
   @@index([createdAt])
 }
 
-// 订阅表
 model Subscription {
-  id          String           @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   planId      String
   startDate   DateTime
   endDate     DateTime?
-  status      String           @default("active") // active, cancelled, expired
-  autoRenew   Boolean          @default(true)
+  status      String    @default("active")
+  autoRenew   Boolean   @default(true)
   stripeSubscriptionId String? @unique
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  
-  // 关联关系
-  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan        Plan             @relation(fields: [planId], references: [id])
-  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan        Plan      @relation(fields: [planId], references: [id])
+
   @@index([userId])
   @@index([status])
 }
 
-// API密钥表
 model ApiKey {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
   name      String
-  keyHash   String   @unique
-  isActive  Boolean  @default(true)
+  keyHash   String    @unique
+  isActive  Boolean   @default(true)
   lastUsed  DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // 关联关系
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([keyHash])
 }
 
-// AI生成记录表
+model Project {
+  id              String   @id @default(cuid())
+  userId          String
+  name            String
+  description     String?
+  status          String   @default("draft")
+  platform        String   @default("TAOBAO")
+  category        String?
+  style           String?
+  productData     String   @default("{}")
+  recognitionData String   @default("{}")
+  layoutData      String   @default("{}")
+  copyData        String   @default("{}")
+  sourceProjectId String?
+  isTemplate      Boolean  @default(false)
+  thumbnailUrl    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks           Task[]
+  projectImages   ProjectImage[]
+  exports         Export[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([platform])
+  @@index([createdAt])
+  @@index([isTemplate])
+}
+
+model ProjectImage {
+  id          String   @id @default(cuid())
+  projectId   String
+  imageUrl    String
+  imageType   String
+  label       String?
+  sortOrder   Int      @default(0)
+  prompt      String?
+  size        String?
+  width       Int?
+  height      Int?
+  createdAt   DateTime @default(now())
+
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([imageType])
+}
+
+model Task {
+  id            String    @id @default(cuid())
+  userId        String
+  projectId     String?
+  type          String
+  status        String    @default("pending")
+  progress      Int       @default(0)
+  stage         String?
+  message       String?
+  payload       String    @default("{}")
+  result        String    @default("{}")
+  error         String?
+  retryCount    Int       @default(0)
+  maxRetries    Int       @default(3)
+  creditCost    Int       @default(0)
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  project       Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model CreditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Int
+  balance     Int
+  type        String
+  description String?
+  taskId      String?
+  projectId   String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
 model Generation {
-  id                String           @id @default(cuid())
+  id                String    @id @default(cuid())
   userId            String
-  status            GenerationStatus @default(QUEUED)
-  workflowStage     WorkflowStage?   @default(PREPROCESSING)
-  platform          Platform         @default(CUSTOM)
-  category          ProductCategory?
-  style             GenerationStyle?
-  resolution        Resolution?      @default(FOUR_K)
+  status            String    @default("QUEUED")
+  workflowStage     String?   @default("PREPROCESSING")
+  platform          String    @default("CUSTOM")
+  category          String?
+  style             String?
+  resolution        String?   @default("FOUR_K")
   productName       String?
-  sellingPoints     String[]
+  sellingPoints     String
   prompt            String?
   originalImageUrl  String?
   whiteBgImageUrl   String?
-  resultUrls        String[]         // 生成的图片URL列表
-  copyContent       Json?            // 结构化文案内容
-  copyText          String?          // 生成的文案（纯文本）
+  resultUrls        String
+  copyContent       String
+  copyText          String?
   mainImageUrl      String?
-  sceneImageUrls    String[]
-  detailImageUrls   String[]
-  sellingPointImageUrls String[]
+  sceneImageUrls    String
+  detailImageUrls   String
+  sellingPointImageUrls String
   detailPageUrl     String?
-  progress          Int              @default(0) // 0-100
-  creditUsed        Int              @default(1)
+  progress          Int       @default(0)
+  creditUsed        Int       @default(1)
   errorMessage      String?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  
-  // 关联关系
-  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   mediaItems        MediaItem[]
-  
+
   @@index([userId])
   @@index([status])
   @@index([platform])
   @@index([createdAt])
 }
 
-// 用户活跃生成任务表（用于并发控制）
 model ActiveGeneration {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  generationId String
-  createdAt DateTime @default(now())
-  
-  // 关联关系
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  generationId  String
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
 }
 
-// 额度记录表
 model Quota {
   id        String   @id @default(cuid())
   userId    String   @unique
@@ -260,55 +289,139 @@ model Quota {
   remaining Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  // 关联关系
+
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
 }
 
-// 素材分类表
 model MediaFolder {
-  id        String   @id @default(cuid())
+  id        String        @id @default(cuid())
   userId    String
   name      String
   parentId  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // 关联关系
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent    MediaFolder?     @relation("FolderHierarchy", fields: [parentId], references: [id])
-  children  MediaFolder[]    @relation("FolderHierarchy")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    MediaFolder?  @relation("FolderHierarchy", fields: [parentId], references: [id])
+  children  MediaFolder[] @relation("FolderHierarchy")
   items     MediaItem[]
-  
+
   @@index([userId])
   @@index([parentId])
 }
 
-// 素材项目表
 model MediaItem {
-  id          String     @id @default(cuid())
-  userId      String
-  folderId    String?
-  name        String
-  url         String
-  type        String     // image, video, etc.
-  imageType   ImageType? // 图片类型
-  size        Int?       // 文件大小（字节）
-  width       Int?
-  height      Int?
+  id           String       @id @default(cuid())
+  userId       String
+  folderId     String?
+  name         String
+  url          String
+  type         String
+  imageType    String?
+  source       String       @default("upload")
+  tags         String       @default("[]")
+  size         Int?
+  width        Int?
+  height       Int?
   generationId String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  
-  // 关联关系
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  folder      MediaFolder? @relation(fields: [folderId], references: [id])
-  generation  Generation?  @relation(fields: [generationId], references: [id])
-  
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder       MediaFolder? @relation(fields: [folderId], references: [id])
+  generation   Generation?  @relation(fields: [generationId], references: [id])
+
   @@index([userId])
   @@index([folderId])
   @@index([generationId])
   @@index([imageType])
+  @@index([source])
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  platform    String
+  category    String?
+  style       String?
+  type        String   @default("detail_page")
+  thumbnailUrl String?
+  layoutData  String   @default("{}")
+  copyData    String   @default("{}")
+  promptData  String   @default("{}")
+  isPublic    Boolean  @default(true)
+  isPremium   Boolean  @default(false)
+  useCount    Int      @default(0)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([platform])
+  @@index([category])
+  @@index([style])
+  @@index([isPublic])
+  @@index([type])
+}
+
+model PromptTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  platform    String
+  category    String?
+  imageType   String
+  style       String?
+  promptText  String
+  negativePrompt String?
+  variables   String   @default("[]")
+  version     Int      @default(1)
+  isActive    Boolean  @default(true)
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([platform])
+  @@index([category])
+  @@index([imageType])
+  @@index([isActive])
+  @@index([version])
+}
+
+model ComplianceRule {
+  id          String   @id @default(cuid())
+  category    String
+  ruleType    String
+  description String
+  keywords    String   @default("[]")
+  action      String   @default("warn")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([ruleType])
+  @@index([isActive])
+}
+
+model Export {
+  id          String   @id @default(cuid())
+  projectId   String
+  userId      String
+  format      String
+  status      String   @default("pending")
+  fileUrl     String?
+  fileSize    Int?
+  width       Int?
+  height      Int?
+  creditCost  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }

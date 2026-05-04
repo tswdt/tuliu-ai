@@ -90,7 +90,7 @@ export default function TestWorkflowPage() {
         {results && (
           <Card>
             <CardHeader className={results.success ? "bg-green-50" : "bg-yellow-50"}>
-              <CardTitle className={results.success ? "text-green-700" : "text-yellow-700"} className="flex items-center">
+              <CardTitle className={`${results.success ? "text-green-700" : "text-yellow-700"} flex items-center`}>
                 {results.success ? (
                   <CheckCircle2 className="w-5 h-5 mr-2" />
                 ) : (

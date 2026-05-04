@@ -7,17 +7,23 @@ const ALIYUN_OSS_BUCKET = process.env.ALIYUN_OSS_BUCKET;
 const ALIYUN_OSS_REGION = process.env.ALIYUN_OSS_REGION;
 const ALIYUN_OSS_ENDPOINT = process.env.ALIYUN_OSS_ENDPOINT;
 
-if (!ALIYUN_OSS_ACCESS_KEY_ID || !ALIYUN_OSS_ACCESS_KEY_SECRET || !ALIYUN_OSS_BUCKET) {
-  throw new Error("未配置阿里云OSS AccessKey，请检查.env文件");
-}
+let _ossClient: InstanceType<typeof OSS> | null = null;
 
-const ossClient = new OSS({
-  region: ALIYUN_OSS_REGION || 'oss-cn-shanghai',
-  accessKeyId: ALIYUN_OSS_ACCESS_KEY_ID,
-  accessKeySecret: ALIYUN_OSS_ACCESS_KEY_SECRET,
-  bucket: ALIYUN_OSS_BUCKET,
-  endpoint: ALIYUN_OSS_ENDPOINT
-});
+function getOssClient(): InstanceType<typeof OSS> {
+  if (!_ossClient) {
+    if (!ALIYUN_OSS_ACCESS_KEY_ID || !ALIYUN_OSS_ACCESS_KEY_SECRET || !ALIYUN_OSS_BUCKET) {
+      throw new Error("未配置阿里云OSS AccessKey，请检查.env文件");
+    }
+    _ossClient = new OSS({
+      region: ALIYUN_OSS_REGION || 'oss-cn-shanghai',
+      accessKeyId: ALIYUN_OSS_ACCESS_KEY_ID,
+      accessKeySecret: ALIYUN_OSS_ACCESS_KEY_SECRET,
+      bucket: ALIYUN_OSS_BUCKET,
+      endpoint: ALIYUN_OSS_ENDPOINT
+    });
+  }
+  return _ossClient;
+}
 
 export async function uploadImageToOSS(
   imageUrl: string,
@@ -36,19 +42,19 @@ export async function uploadImageToOSS(
     
     const fileName = `${fileNamePrefix}/${Date.now()}-${Math.random().toString(36).substring(2, 10)}.jpg`;
     
-    await ossClient.put(fileName, Buffer.from(buffer), {
+    await getOssClient().put(fileName, Buffer.from(buffer), {
       headers: {
         'Content-Type': 'image/jpeg'
       }
     });
     
-    let signedUrl = ossClient.signatureUrl(fileName, { 
+    let signedUrl = getOssClient().signatureUrl(fileName, { 
       expires: 3600 * 24 * 365 * 10 
     });
     
     if (targetSize) {
       const resizeProcess = `image/resize,m_lfit,w_${targetSize.width},h_${targetSize.height}`;
-      signedUrl = ossClient.signatureUrl(fileName, {
+      signedUrl = getOssClient().signatureUrl(fileName, {
         expires: 3600 * 24 * 365 * 10,
         process: resizeProcess
       });

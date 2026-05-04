@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// 图片生成API
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { userId, prompt, platform, originalImageUrl } = body;
 
-    // 验证用户
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -19,7 +17,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // 检查额度
     if (user.credits <= 0) {
       return NextResponse.json(
         { error: "额度不足，请购买套餐" },
@@ -27,19 +24,24 @@ export async function POST(request: Request) {
       );
     }
 
-    // 创建生成记录
     const generation = await prisma.generation.create({
       data: {
         userId,
         prompt,
         platform: platform || "CUSTOM",
         originalImageUrl,
+        sellingPoints: '[]',
+        resultUrls: '[]',
+        sceneImageUrls: '[]',
+        detailImageUrls: '[]',
+        sellingPointImageUrls: '[]',
+        copyContent: '{}',
+        copyText: '',
         status: "QUEUED",
         creditUsed: 1,
       },
     });
 
-    // 扣减额度
     await prisma.user.update({
       where: { id: userId },
       data: {
@@ -48,11 +50,8 @@ export async function POST(request: Request) {
       },
     });
 
-    // TODO: 这里应该调用真实的AI API进行生成
-    // 模拟异步处理
     setTimeout(async () => {
       try {
-        // 模拟生成的图片URL
         const mockResultUrls = [
           "https://placehold.co/800x800/3b82f6/ffffff?text=AI+Generated+1",
           "https://placehold.co/800x800/10b981/ffffff?text=AI+Generated+2",
@@ -60,12 +59,11 @@ export async function POST(request: Request) {
           "https://placehold.co/800x800/8b5cf6/ffffff?text=AI+Generated+4",
         ];
 
-        // 更新生成记录为完成状态
         await prisma.generation.update({
           where: { id: generation.id },
           data: {
             status: "COMPLETED",
-            resultUrls: mockResultUrls,
+            resultUrls: JSON.stringify(mockResultUrls),
           },
         });
       } catch (error) {
@@ -94,7 +92,6 @@ export async function POST(request: Request) {
   }
 }
 
-// 获取生成状态
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);

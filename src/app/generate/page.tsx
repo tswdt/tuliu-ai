@@ -216,7 +216,7 @@ export default function GeneratePage() {
         
         if (progressData) {
           setProgress(progressData.progress);
-          setCurrentStage(progressData.stage);
+          setCurrentStage(progressData.stage as WorkflowStage);
           setStageMessage(progressData.message);
 
           if (progressData.progress >= 100) {

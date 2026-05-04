@@ -7,9 +7,9 @@ const TASK_CHANNEL = 'task_updates';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { taskId: string } }
+  { params }: { params: Promise<{ taskId: string }> }
 ) {
-  const taskId = params.taskId;
+  const { taskId } = await params;
 
   const encoder = new TextEncoder();
   const redis = getRedisClient();
