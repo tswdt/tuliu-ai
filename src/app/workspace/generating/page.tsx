@@ -44,19 +44,36 @@ function GeneratingContent() {
   useEffect(() => {
     const runWorkflow = async () => {
       try {
-        const res = await fetch("/api/test-workflow", {
+        const res = await fetch("/api/workflow/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            action: "full",
-            imageUrl,
-            platform,
-            style,
-            sellingPoints: JSON.parse(sellingPointsStr),
+            productImageUrls: [imageUrl],
+            competitorImageUrls: [],
+            competitorReferenceModes: [],
+            platform: platform,
+            language: "zh-cn",
+            model: "nano-banana-2",
+            outputTypes: ["main", "sub", "detail"],
+            mainImageCount: "1",
+            subImageCount: "3",
+            detailImageCount: "4",
+            detailModuleCount: "5",
+            sizePreset: "3:4",
+            quality: "2k",
+            visualStyle: style === "SIMPLE" ? "minimal" : style === "LUXURY" ? "luxury" : style === "NATIONAL_TREND" ? "guochao" : style === "TECH" ? "tech" : "nature",
+            pricePositioning: "mid-range",
+            postProcessingOptions: [],
+            copyIntensity: "clear-sp",
+            targetAudiences: [],
+            usageScenarios: [],
+            subjectConsistency: "normal",
+            subjectLockRules: [],
+            detailDesc: "",
           }),
         });
         const data = await res.json();
-        const result = data.result || data;
+        const result = data.analysis ? { analysis: data.analysis, images: data.images, copy: data.copy } : data;
         const params = new URLSearchParams({
           imageUrl,
           platform,

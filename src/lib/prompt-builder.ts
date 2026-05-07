@@ -30,14 +30,20 @@ const VISUAL_STYLE_MAP: Record<string, string> = {
   minimal: '高级简约风格，极简构图，留白充足，干净利落，突出产品本身',
   tech: '科技感风格，蓝色调光线，未来感，赛博朋克元素，金属质感',
   'luxury-beauty': '轻奢美妆风格，高级质感，柔和光线，精致优雅，ins风',
+  luxury: '轻奢美妆风格，高级质感，柔和光线，精致优雅，ins风',
   guochao: '国潮风格，中国传统元素与现代设计融合，文化底蕴，潮流感',
   fresh: '清新自然风格，自然光线，绿植元素，温暖色调，舒适氛围',
+  nature: '清新自然风格，自然光线，绿植元素，温暖色调，舒适氛围',
   'baby-gentle': '母婴温柔风格，柔和光线，温馨色调，安全舒适感，可爱元素',
+  baby: '母婴温柔风格，柔和光线，温馨色调，安全舒适感，可爱元素',
   'food-appetite': '食品食欲感风格，暖色调，诱人质感，新鲜食材感，美味氛围',
+  food: '食品食欲感风格，暖色调，诱人质感，新鲜食材感，美味氛围',
   'jd-quality': '京东品质风格，清晰专业，质感突出，克制不花哨，品质感强',
   'taobao-convert': '淘宝转化风格，色彩饱满，卖点突出，转化导向，视觉冲击',
   'pdd-sale': '拼多多促销风格，亲民实惠，色彩鲜艳，促销感强，利益点醒目',
+  'pdd-promo': '拼多多促销风格，亲民实惠，色彩鲜艳，促销感强，利益点醒目',
   'amazon-a': '亚马逊A+简洁风格，白底为主，简约专业，规范统一，国际化',
+  'a-plus-clean': '亚马逊A+简洁风格，白底为主，简约专业，规范统一，国际化',
 };
 
 const PRICE_POSITIONING_MAP: Record<string, string> = {
@@ -52,9 +58,13 @@ const COPY_INTENSITY_MAP: Record<string, string> = {
   restrained: '文案风格：克制专业，简洁有力，不堆砌辞藻，用数据和事实说话',
   'clear-sp': '文案风格：卖点清晰，层次分明，每个卖点独立突出，便于快速浏览',
   'hard-sell': '文案风格：强转化导向，紧迫感强，行动号召明确，促进下单决策',
+  'high-convert': '文案风格：强转化导向，紧迫感强，行动号召明确，促进下单决策',
   'promo-driven': '文案风格：促销导向，价格优势突出，优惠信息醒目，限时抢购氛围',
+  promo: '文案风格：促销导向，价格优势突出，优惠信息醒目，限时抢购氛围',
   'spec-heavy': '文案风格：参数说明型，规格详尽，数据清晰，适合理性消费决策',
+  'param-desc': '文案风格：参数说明型，规格详尽，数据清晰，适合理性消费决策',
   'xhs-style': '文案风格：小红书种草型，真实体验感，生活化表达，颜值和质感优先',
+  xiaohongshu: '文案风格：小红书种草型，真实体验感，生活化表达，颜值和质感优先',
   'amazon-clean': '文案风格：亚马逊简洁型，英文规范表达，功能描述清晰，少营销化',
 };
 
@@ -66,6 +76,9 @@ const SIZE_PRESET_MAP: Record<string, { ratio: string; desc: string }> = {
   '750-taobao': { ratio: '750px宽', desc: '淘宝详情页标准宽度750px，纵向自由延伸' },
   '800-jd': { ratio: '800px宽', desc: '京东详情页标准宽度800px，纵向自由延伸' },
   'amazon-a-plus': { ratio: 'A+模块', desc: '亚马逊A+页面模块化布局，规范统一' },
+  '750px': { ratio: '750px宽', desc: '淘宝详情页标准宽度750px，纵向自由延伸' },
+  '800px': { ratio: '800px宽', desc: '京东详情页标准宽度800px，纵向自由延伸' },
+  'a-plus': { ratio: 'A+模块', desc: '亚马逊A+页面模块化布局，规范统一' },
 };
 
 const SUBJECT_CONSISTENCY_MAP: Record<string, string> = {
@@ -78,6 +91,7 @@ const OUTPUT_TYPE_MAP: Record<string, { label: string; promptMod: string }> = {
   main: { label: '商品主图', promptMod: '商品主体居中，完整展示商品全貌，正面视角，白底或浅色背景' },
   sub: { label: '商品附图', promptMod: '多角度展示商品，不同视角，辅助展示商品特点' },
   white: { label: '白底图', promptMod: '纯白背景，商品居中，无阴影或柔和阴影，适合平台规范' },
+  'white-bg': { label: '白底图', promptMod: '纯白背景，商品居中，无阴影或柔和阴影，适合平台规范' },
   scene: { label: '场景图', promptMod: '场景化展示，有氛围感，生活化，自然使用状态，环境融入' },
   detail: { label: '细节图', promptMod: '局部特写，细节展示，材质纹理清晰，微距摄影效果' },
   'selling-point': { label: '卖点图', promptMod: '突出核心卖点，视觉冲击力强，信息图风格，重点展示' },
@@ -86,6 +100,7 @@ const OUTPUT_TYPE_MAP: Record<string, { label: string; promptMod: string }> = {
   compare: { label: '对比图', promptMod: '对比展示，突出产品优势，前后对比或竞品对比效果' },
   'detail-long': { label: '详情页长图', promptMod: '详情页排版，商品展示+图文结合，信息层次分明，适合长页面' },
   'amazon-a-plus': { label: '亚马逊A+模块', promptMod: '亚马逊A+页面模块，品牌展示+产品特点，模块化布局，专业规范' },
+  'a-plus': { label: '亚马逊A+模块', promptMod: '亚马逊A+页面模块，品牌展示+产品特点，模块化布局，专业规范' },
   'video-cover': { label: '短视频封面', promptMod: '短视频封面风格，视觉冲击力强，适合作为视频首帧，吸引点击' },
 };
 
@@ -93,6 +108,8 @@ const LANGUAGE_MAP: Record<string, string> = {
   none: '不添加任何文字',
   'zh-CN': '中文简体',
   'zh-TW': '中文繁体',
+  'zh-cn': '中文简体',
+  'zh-tw': '中文繁体',
   en: 'English',
   ja: '日本語',
   ko: '한국어',
@@ -273,10 +290,10 @@ export function getOutputTypeLabel(type: string): string {
 
 export function getVisualStyleLabel(style: string): string {
   const map: Record<string, string> = {
-    minimal: '高级简约', tech: '科技感', 'luxury-beauty': '轻奢美妆',
-    guochao: '国潮风', fresh: '清新自然', 'baby-gentle': '母婴温柔',
-    'food-appetite': '食品食欲感', 'jd-quality': '京东品质风',
-    'taobao-convert': '淘宝转化风', 'pdd-sale': '拼多多促销风', 'amazon-a': '亚马逊A+简洁风',
+    minimal: '高级简约', tech: '科技感', 'luxury-beauty': '轻奢美妆', luxury: '轻奢美妆',
+    guochao: '国潮风', fresh: '清新自然', nature: '清新自然', 'baby-gentle': '母婴温柔', baby: '母婴温柔',
+    'food-appetite': '食品食欲感', food: '食品食欲感', 'jd-quality': '京东品质风',
+    'taobao-convert': '淘宝转化风', 'pdd-sale': '拼多多促销风', 'pdd-promo': '拼多多促销风', 'amazon-a': '亚马逊A+简洁风', 'a-plus-clean': '亚马逊A+简洁风',
   };
   return map[style] || style;
 }
@@ -290,8 +307,9 @@ export function getPriceLabel(pos: string): string {
 
 export function getCopyLabel(intensity: string): string {
   const map: Record<string, string> = {
-    restrained: '克制专业', 'clear-sp': '卖点清晰', 'hard-sell': '强转化',
-    'promo-driven': '促销导向', 'spec-heavy': '参数说明型', 'xhs-style': '小红书种草型', 'amazon-clean': '亚马逊简洁型',
+    restrained: '克制专业', 'clear-sp': '卖点清晰', 'hard-sell': '强转化', 'high-convert': '强转化',
+    'promo-driven': '促销导向', promo: '促销导向', 'spec-heavy': '参数说明型', 'param-desc': '参数说明型',
+    'xhs-style': '小红书种草型', xiaohongshu: '小红书种草型', 'amazon-clean': '亚马逊简洁型',
   };
   return map[intensity] || intensity;
 }
@@ -300,6 +318,7 @@ export function getSizeLabel(preset: string): string {
   const map: Record<string, string> = {
     '1:1': '1:1 商品主图', '3:4': '3:4 竖版详情图', '4:5': '4:5 电商图',
     '9:16': '9:16 抖音竖图', '750-taobao': '750px 淘宝详情页', '800-jd': '800px 京东详情页', 'amazon-a-plus': '亚马逊A+模块',
+    '750px': '750px 淘宝详情页', '800px': '800px 京东详情页', 'a-plus': '亚马逊A+模块',
   };
   return map[preset] || preset;
 }

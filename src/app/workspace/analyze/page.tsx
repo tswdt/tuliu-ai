@@ -53,10 +53,33 @@ function AnalyzeContent() {
     }
     const analyze = async () => {
       try {
-        const res = await fetch("/api/test-workflow", {
+        const res = await fetch("/api/workflow/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "analyze", imageUrl }),
+          body: JSON.stringify({
+            productImageUrls: [imageUrl],
+            competitorImageUrls: [],
+            competitorReferenceModes: [],
+            platform: "auto",
+            language: "none",
+            model: "nano-banana-2",
+            outputTypes: ["main"],
+            mainImageCount: "1",
+            subImageCount: "0",
+            detailImageCount: "0",
+            detailModuleCount: "0",
+            sizePreset: "1:1",
+            quality: "2k",
+            visualStyle: "minimal",
+            pricePositioning: "mid-range",
+            postProcessingOptions: [],
+            copyIntensity: "clear-sp",
+            targetAudiences: [],
+            usageScenarios: [],
+            subjectConsistency: "normal",
+            subjectLockRules: [],
+            detailDesc: "",
+          }),
         });
         const data = await res.json();
         setAnalysis(data.analysis || data.result || null);

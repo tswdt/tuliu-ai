@@ -122,16 +122,42 @@ export default function CreatePage() {
     if (!imageFile) return;
     setStep("analyzing");
 
-    const formData = new FormData();
-    formData.append("image", imageFile);
-
     try {
-      const res = await fetch("/api/test-workflow", {
+      const formData = new FormData();
+      formData.append("image", imageFile);
+      const uploadRes = await fetch("/api/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+      const uploadData = await uploadRes.json();
+      const uploadedUrl = uploadData.imageUrl || imagePreview;
+
+      const res = await fetch("/api/workflow/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          imageUrl: imagePreview,
-          mode: "analyze",
+          productImageUrls: [uploadedUrl],
+          competitorImageUrls: [],
+          competitorReferenceModes: [],
+          platform: "auto",
+          language: "none",
+          model: "nano-banana-2",
+          outputTypes: ["main"],
+          mainImageCount: "1",
+          subImageCount: "0",
+          detailImageCount: "0",
+          detailModuleCount: "0",
+          sizePreset: "1:1",
+          quality: "2k",
+          visualStyle: "minimal",
+          pricePositioning: "mid-range",
+          postProcessingOptions: [],
+          copyIntensity: "clear-sp",
+          targetAudiences: [],
+          usageScenarios: [],
+          subjectConsistency: "normal",
+          subjectLockRules: [],
+          detailDesc: "",
         }),
       });
       const data = await res.json();
@@ -155,23 +181,40 @@ export default function CreatePage() {
     setGeneratingMessage("正在识别商品信息...");
 
     try {
-      const res = await fetch("/api/test-workflow", {
+      const res = await fetch("/api/workflow/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          imageUrl: imagePreview,
+          productImageUrls: [imagePreview],
+          competitorImageUrls: [],
+          competitorReferenceModes: [],
           platform: selectedPlatform,
-          style: selectedStyle,
-          sellingPoints,
-          mode: "full",
+          language: "zh-cn",
+          model: "nano-banana-2",
+          outputTypes: ["main", "sub", "detail"],
+          mainImageCount: "1",
+          subImageCount: "3",
+          detailImageCount: "4",
+          detailModuleCount: "5",
+          sizePreset: "3:4",
+          quality: "2k",
+          visualStyle: selectedStyle === "SIMPLE" ? "minimal" : selectedStyle === "LUXURY" ? "luxury" : selectedStyle === "NATIONAL_TREND" ? "guochao" : selectedStyle === "TECH" ? "tech" : "nature",
+          pricePositioning: "mid-range",
+          postProcessingOptions: [],
+          copyIntensity: "clear-sp",
+          targetAudiences: [],
+          usageScenarios: [],
+          subjectConsistency: "normal",
+          subjectLockRules: [],
+          detailDesc: "",
         }),
       });
 
       const data = await res.json();
 
-      if (data.success && data.result) {
-        setGeneratedImages(data.result.images || []);
-        setCopyContent(data.result.copy || null);
+      if (data.success) {
+        setGeneratedImages(data.images || []);
+        setCopyContent(data.copy || null);
         setGeneratingProgress(100);
         setGeneratingMessage("生成完成！");
         setTimeout(() => setStep("result"), 500);
