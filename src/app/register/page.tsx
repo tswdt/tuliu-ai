@@ -52,7 +52,7 @@ export default function RegisterPage() {
               <div className="h-8 w-8 rounded-lg bg-[#1d1d1f] flex items-center justify-center">
                 <Sparkles className="h-5 w-5 text-white" />
               </div>
-              <span className="text-2xl font-bold text-[#1d1d1f]">燎原 AI</span>
+              <span className="text-2xl font-bold text-[#1d1d1f]">图流 AI</span>
             </div>
           </div>
           <h1 className="text-[24px] font-bold text-[#1d1d1f]">创建账户</h1>

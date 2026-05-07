@@ -120,7 +120,7 @@ export default function PricingPage() {
               <div className="h-7 w-7 rounded-lg bg-[#1d1d1f] flex items-center justify-center">
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
-              <span className="text-[16px] font-semibold tracking-tight">燎原 AI</span>
+              <span className="text-[16px] font-semibold tracking-tight">图流 AI</span>
             </div>
             <div className="hidden md:flex items-center space-x-8 text-[14px]">
               <Link href="/" className="text-[#86868b] hover:text-[#1d1d1f] transition-colors">首页</Link>

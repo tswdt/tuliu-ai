@@ -9,9 +9,6 @@ import {
   ChevronDown,
   ImageIcon,
   Wand2,
-  Coins,
-  Bell,
-  User,
 } from "lucide-react";
 
 const steps = [
@@ -53,6 +50,7 @@ const qualities = [
   { id: "4k", label: "4K 超清" },
 ];
 
+// TODO: 后续需要按主图、附图、细节图、详情页模块分别配置数量
 const quantities = [
   { id: "1", label: "1 张" },
   { id: "3", label: "3 张" },
@@ -66,6 +64,11 @@ const languages = [
   { id: "zh-tw", label: "繁体中文" },
   { id: "en", label: "English" },
   { id: "ja", label: "日本語" },
+  { id: "ko", label: "한국어" },
+  { id: "de", label: "Deutsch" },
+  { id: "fr", label: "Français" },
+  { id: "es", label: "Español" },
+  { id: "ru", label: "Русский" },
 ];
 
 interface SelectProps {
@@ -170,32 +173,8 @@ export default function CreateProjectPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7]">
-      <div className="flex justify-between items-center px-4 sm:px-6 pt-3 pb-2">
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-[#1d1d1f] flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-white" />
-          </div>
-          <span className="font-bold text-[#1d1d1f] text-sm">燎原 AI</span>
-          <span className="text-[#e5e5e5]">|</span>
-          <span className="text-sm text-[#86868b]">工作台</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#e5e5e5] text-xs font-medium">
-            <Coins className="h-3.5 w-3.5 text-[#666]" />
-            <span className="text-[#1d1d1f]">100 次</span>
-          </div>
-          <button className="relative h-8 w-8 rounded-lg hover:bg-white border border-[#e5e5e5] flex items-center justify-center transition-colors cursor-pointer">
-            <Bell className="h-4 w-4 text-[#86868b]" />
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#ff3b30]" />
-          </button>
-          <div className="h-8 w-8 rounded-full bg-white border border-[#e5e5e5] flex items-center justify-center cursor-pointer">
-            <User className="h-4 w-4 text-[#86868b]" />
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-center pt-2 pb-3">
+    <div>
+      <div className="flex justify-center pt-3 pb-2">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#e5e5e5] text-[14px] text-[#666]">
           <Sparkles className="h-4 w-4 text-[#999]" />
           AI 全品类商品图

@@ -144,7 +144,7 @@ export default function Home() {
               <div className="h-7 w-7 rounded-lg bg-black flex items-center justify-center">
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
-              <span className="text-[16px] font-semibold tracking-tight">燎原 AI</span>
+              <span className="text-[16px] font-semibold tracking-tight">图流 AI</span>
             </div>
             <Link href="/login">
               <Button variant="ghost" className="text-[14px] font-medium text-[#1d1d1f] hover:bg-black/5 rounded-full px-5 h-9 cursor-pointer">
@@ -158,7 +158,7 @@ export default function Home() {
       <section className="pt-36 pb-16 px-4">
         <div className="max-w-5xl mx-auto text-center">
           <h1 className="text-[40px] sm:text-[52px] md:text-[64px] lg:text-[72px] font-bold mb-8 leading-[1.05] tracking-[-0.03em] text-[#1d1d1f]">
-            燎原 AI：你的<br className="sm:hidden" /> AI 电商视觉专家
+            图流 AI：你的<br className="sm:hidden" /> AI 电商视觉专家
           </h1>
           <p className="text-[18px] md:text-[20px] text-[#86868b] mb-14 max-w-2xl mx-auto leading-[1.7] tracking-[-0.01em]">
             让小团队也有大牌设计力。支持智能全品类商品图和风格复刻，让您的商品脱颖而出。
@@ -208,9 +208,9 @@ export default function Home() {
             <div className="h-6 w-6 rounded-md bg-black flex items-center justify-center">
               <Sparkles className="h-3.5 w-3.5 text-white" />
             </div>
-            <span className="text-[14px] font-semibold text-[#1d1d1f]">燎原 AI</span>
+            <span className="text-[14px] font-semibold text-[#1d1d1f]">图流 AI</span>
           </div>
-          <p className="text-[14px] text-[#86868b]">© 2026 燎原 AI. All rights reserved.</p>
+          <p className="text-[14px] text-[#86868b]">© 2026 图流 AI. All rights reserved.</p>
         </div>
       </footer>
 

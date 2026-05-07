@@ -42,7 +42,7 @@ export default function AdminLayout({
               <span className="font-bold text-gray-900">后台管理</span>
             </div>
             <span className="text-gray-300">|</span>
-            <span className="text-sm text-gray-500">燎原 AI</span>
+            <span className="text-sm text-gray-500">图流 AI</span>
           </div>
           <Link href="/workspace" className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1">
             <ArrowLeft className="h-3.5 w-3.5" />

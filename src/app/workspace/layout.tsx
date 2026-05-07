@@ -11,6 +11,9 @@ import {
   Coins,
   Settings,
   X,
+  Sparkles,
+  Bell,
+  User,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -42,9 +45,44 @@ export default function WorkspaceLayout({
         />
       )}
 
+      {/* 顶部栏 */}
+      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-[#e5e5e5]">
+        <div className="flex justify-between items-center px-4 sm:px-6 h-12">
+          <div className="flex items-center gap-3">
+            <button
+              className="md:hidden cursor-pointer"
+              onClick={() => setMobileMenuOpen(true)}
+            >
+              <svg className="h-5 w-5 text-[#1d1d1f]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <div className="h-7 w-7 rounded-lg bg-[#1d1d1f] flex items-center justify-center">
+              <Sparkles className="h-3.5 w-3.5 text-white" />
+            </div>
+            <span className="font-bold text-[#1d1d1f] text-sm">图流 AI</span>
+            <span className="text-[#e5e5e5]">|</span>
+            <span className="text-sm text-[#86868b]">工作台</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#f5f5f7] border border-[#e5e5e5] text-xs font-medium">
+              <Coins className="h-3.5 w-3.5 text-[#666]" />
+              <span className="text-[#1d1d1f]">100 次</span>
+            </div>
+            <button className="relative h-7 w-7 rounded-lg hover:bg-[#f5f5f7] border border-[#e5e5e5] flex items-center justify-center transition-colors cursor-pointer">
+              <Bell className="h-3.5 w-3.5 text-[#86868b]" />
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[#ff3b30]" />
+            </button>
+            <div className="h-7 w-7 rounded-full bg-[#f5f5f7] border border-[#e5e5e5] flex items-center justify-center cursor-pointer">
+              <User className="h-3.5 w-3.5 text-[#86868b]" />
+            </div>
+          </div>
+        </div>
+      </header>
+
       <div className="flex">
         {/* 左侧边栏 */}
-        <aside className={`fixed md:static inset-y-0 left-0 z-50 w-52 bg-white border-r border-[#e5e5e5] min-h-screen flex flex-col transition-transform ${
+        <aside className={`fixed md:static inset-y-0 left-0 z-50 w-52 bg-white border-r border-[#e5e5e5] min-h-[calc(100vh-48px)] flex flex-col transition-transform ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}>
           <div className="md:hidden flex items-center justify-between p-4 border-b border-[#e5e5e5]">

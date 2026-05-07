@@ -240,7 +240,7 @@ export default function CreatePage() {
               <div className="h-7 w-7 rounded-lg bg-[#1d1d1f] flex items-center justify-center">
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
-              <span className="font-bold text-gray-900">燎原 AI</span>
+              <span className="font-bold text-gray-900">图流 AI</span>
             </Link>
             <span className="text-gray-300">|</span>
             <span className="text-sm text-gray-500">

@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "燎原 AI - 一站式电商AI设计平台",
+  title: "图流 AI - 一站式电商AI设计平台",
   description: "一键生成4K超清商品主图、详情页全套图，支持多平台尺寸适配",
 };
 

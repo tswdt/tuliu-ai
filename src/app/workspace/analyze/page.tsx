@@ -48,7 +48,7 @@ function AnalyzeContent() {
 
   useEffect(() => {
     if (!imageUrl) {
-      router.push("/workspace/new");
+      router.push("/workspace/create");
       return;
     }
     const analyze = async () => {
@@ -203,7 +203,7 @@ function AnalyzeContent() {
       </div>
 
       <div className="flex items-center justify-between mt-8">
-        <Button variant="outline" onClick={() => router.push("/workspace/new")} className="rounded-xl border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] hover:border-[#ccc] cursor-pointer">
+        <Button variant="outline" onClick={() => router.push("/workspace/create")} className="rounded-xl border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] hover:border-[#ccc] cursor-pointer">
           <ArrowLeft className="h-4 w-4 mr-2" />
           重新上传
         </Button>

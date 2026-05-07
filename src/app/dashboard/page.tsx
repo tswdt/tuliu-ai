@@ -59,7 +59,7 @@ export default function DashboardPage() {
               <div className="h-8 w-8 rounded-lg bg-[#1d1d1f] flex items-center justify-center">
                 <Sparkles className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-[#1d1d1f]">燎原 AI</span>
+              <span className="text-xl font-bold text-[#1d1d1f]">图流 AI</span>
             </Link>
             <div className="hidden sm:flex items-center space-x-1 ml-4 px-3 py-1 rounded-full bg-[#f0fdf4]">
               <Activity className="h-3 w-3 text-green-500" />
