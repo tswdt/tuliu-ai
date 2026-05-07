@@ -44,9 +44,18 @@ function GeneratingContent() {
   useEffect(() => {
     const runWorkflow = async () => {
       try {
+        const token = localStorage.getItem("auth_token");
+        if (!token) {
+          router.push("/login");
+          return;
+        }
+
         const res = await fetch("/api/workflow/generate", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             productImageUrls: [imageUrl],
             competitorImageUrls: [],

@@ -5,7 +5,7 @@ import { logger } from '@/app/utils/logger';
 import { analyzeProductStructured } from '@/app/utils/ai/qwen-vl';
 import { generateImageWithSuchuang } from '@/app/utils/ai/suchuang-image';
 import { generateImageWithWanxiang } from '@/app/utils/ai/wanxiang';
-import { checkCredits, deductCredits } from '@/lib/credits';
+import { checkCredits, deductCredits, refundCredits, estimateCredits } from '@/lib/credits';
 import {
   buildImagePrompt,
   buildCopyPrompt,
@@ -27,6 +27,11 @@ function getUserId(request: NextRequest): string | null {
 }
 
 export async function POST(request: NextRequest) {
+  const userId = getUserId(request);
+  if (!userId) {
+    return NextResponse.json({ success: false, error: '请先登录' }, { status: 401 });
+  }
+
   let body: WorkflowConfig;
   try {
     body = await request.json();
@@ -72,98 +77,89 @@ export async function POST(request: NextRequest) {
     }, { status: 503 });
   }
 
-  const userId = getUserId(request);
+  const creditEstimate = estimateCredits({
+    mainImageCount,
+    subImageCount,
+    detailImageCount,
+    detailModuleCount,
+    outputTypes,
+    quality,
+  });
+  const estimatedCredits = creditEstimate.total;
 
-  const estimatedCredits =
-    (parseInt(mainImageCount || '0') +
-      parseInt(subImageCount || '0') +
-      parseInt(detailImageCount || '0') +
-      parseInt(detailModuleCount || '0')) * 2 + 1;
-
-  if (userId) {
-    const creditCheck = await checkCredits(userId, 'full_pipeline');
-    if (!creditCheck.sufficient) {
-      return NextResponse.json({
-        success: false,
-        error: '积分不足',
-        detail: `需要约 ${estimatedCredits} 积分，当前余额 ${creditCheck.balance}`,
-        balance: creditCheck.balance,
-        required: estimatedCredits,
-      }, { status: 402 });
-    }
+  const creditCheck = await checkCredits(userId, estimatedCredits);
+  if (!creditCheck.sufficient) {
+    return NextResponse.json({
+      success: false,
+      error: '积分不足',
+      detail: `需要 ${estimatedCredits} 积分（识别1 + 图片${creditEstimate.imageCount}×2${creditEstimate.fourKExtra > 0 ? ` + 4K加价${creditEstimate.fourKExtra}` : ''} + 文案1），当前余额 ${creditCheck.balance}`,
+      balance: creditCheck.balance,
+      required: estimatedCredits,
+    }, { status: 402 });
   }
 
   const primaryImageUrl = productImageUrls[0];
 
-  let project: any = null;
-  let task: any = null;
+  const project = await prisma.project.create({
+    data: {
+      userId,
+      name: 'AI 生成项目',
+      platform: platform || 'TAOBAO',
+      status: 'processing',
+      productData: JSON.stringify({
+        productImageUrls,
+        competitorImageUrls,
+        competitorReferenceModes,
+        config: body,
+      }),
+    },
+  });
 
-  if (userId) {
-    project = await prisma.project.create({
-      data: {
-        userId,
-        name: 'AI 生成项目',
-        platform: platform || 'TAOBAO',
-        status: 'processing',
-        productData: JSON.stringify({
-          productImageUrls,
-          competitorImageUrls,
-          competitorReferenceModes,
-          config: body,
-        }),
-      },
-    });
+  const task = await prisma.task.create({
+    data: {
+      userId,
+      projectId: project.id,
+      type: 'full_pipeline',
+      status: 'processing',
+      progress: 0,
+      stage: 'ANALYZING',
+      message: '开始分析产品...',
+      payload: JSON.stringify(body),
+      creditCost: estimatedCredits,
+      startedAt: new Date(),
+    },
+  });
 
-    task = await prisma.task.create({
-      data: {
-        userId,
-        projectId: project.id,
-        type: 'full_pipeline',
-        status: 'processing',
-        progress: 0,
-        stage: 'ANALYZING',
-        message: '开始分析产品...',
-        payload: JSON.stringify(body),
-        creditCost: estimatedCredits,
-        startedAt: new Date(),
-      },
-    });
-  }
+  logger.info('[Generate API] 开始处理', { projectId: project.id, taskId: task.id, userId, estimatedCredits });
 
-  logger.info('[Generate API] 开始处理', { projectId: project?.id, taskId: task?.id, userId: userId || 'guest' });
+  let creditsDeducted = false;
 
   try {
-    if (task) {
-      await prisma.task.update({
-        where: { id: task.id },
-        data: { progress: 5, stage: 'ANALYZING', message: 'AI 识别商品中...' },
-      });
-    }
+    await prisma.task.update({
+      where: { id: task.id },
+      data: { progress: 5, stage: 'ANALYZING', message: 'AI 识别商品中...' },
+    });
 
     const analysis = await analyzeProductStructured(primaryImageUrl);
 
-    if (task) {
-      await prisma.task.update({
-        where: { id: task.id },
-        data: {
-          progress: 20,
-          stage: 'ANALYZING',
-          message: `识别完成：${analysis.productName}`,
-        },
-      });
-    }
+    await prisma.task.update({
+      where: { id: task.id },
+      data: {
+        progress: 20,
+        stage: 'ANALYZING',
+        message: `识别完成：${analysis.productName}`,
+      },
+    });
 
-    if (project) {
-      await prisma.project.update({
-        where: { id: project.id },
-        data: {
-          name: analysis.productName || 'AI 生成项目',
-          category: analysis.category,
-          style: visualStyle,
-          recognitionData: JSON.stringify(analysis),
-        },
-      });
-    }
+    await prisma.project.update({
+      where: { id: project.id },
+      data: {
+        name: analysis.productName || 'AI 生成项目',
+        category: analysis.category,
+        style: visualStyle,
+        recognitionData: JSON.stringify(analysis),
+      },
+    });
 
     const imageCountMap: Record<string, number> = {
       main: parseInt(mainImageCount || '1'),
@@ -194,16 +190,14 @@ export async function POST(request: NextRequest) {
 
     const totalImages = allImageTasks.length;
 
-    if (task) {
-      await prisma.task.update({
-        where: { id: task.id },
-        data: {
-          progress: 30,
-          stage: 'GENERATING_IMAGES',
-          message: `开始生成图片 (0/${totalImages})...`,
-        },
-      });
-    }
+    await prisma.task.update({
+      where: { id: task.id },
+      data: {
+        progress: 30,
+        stage: 'GENERATING_IMAGES',
+        message: `开始生成图片 (0/${totalImages})...`,
+      },
+    });
 
     const generatedImages: { url: string; type: string; index: number; prompt: string }[] = [];
     const maxConcurrent = 2;
@@ -272,43 +266,37 @@ export async function POST(request: NextRequest) {
         completed++;
       }
 
-      if (task) {
-        const imgProgress = 30 + Math.floor((completed / totalImages) * 50);
-        await prisma.task.update({
-          where: { id: task.id },
-          data: {
-            progress: imgProgress,
-            message: `正在生成图片 (${completed}/${totalImages})...`,
-          },
-        });
-      }
-    }
-
-    if (project) {
-      for (const img of generatedImages) {
-        await prisma.projectImage.create({
-          data: {
-            projectId: project.id,
-            imageUrl: img.url,
-            imageType: img.type,
-            label: `${img.type}-${img.index + 1}`,
-            sortOrder: img.index,
-            prompt: img.prompt,
-          },
-        });
-      }
-    }
-
-    if (task) {
+      const imgProgress = 30 + Math.floor((completed / totalImages) * 50);
       await prisma.task.update({
         where: { id: task.id },
         data: {
-          progress: 82,
-          stage: 'GENERATING_COPY',
-          message: '正在生成详情页文案...',
+          progress: imgProgress,
+          message: `正在生成图片 (${completed}/${totalImages})...`,
         },
       });
     }
+
+    for (const img of generatedImages) {
+      await prisma.projectImage.create({
+        data: {
+          projectId: project.id,
+          imageUrl: img.url,
+          imageType: img.type,
+          label: `${img.type}-${img.index + 1}`,
+          sortOrder: img.index,
+          prompt: img.prompt,
+        },
+      });
+    }
+
+    await prisma.task.update({
+      where: { id: task.id },
+      data: {
+        progress: 82,
+        stage: 'GENERATING_COPY',
+        message: '正在生成详情页文案...',
+      },
+    });
 
     let copyContent: any = null;
     if (LLM_CONFIG.key) {
@@ -365,58 +353,55 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    let deductResult = { success: true, balance: 0 };
+    const deductResult = await deductCredits(userId, estimatedCredits, {
+      taskId: task.id,
+      projectId: project.id,
+      description: `AI生成 ${generatedImages.length} 张图片 + 文案（识别1 + 图片${creditEstimate.imageCount}×2${creditEstimate.fourKExtra > 0 ? ` + 4K×${creditEstimate.fourKExtra}` : ''} + 文案1）`,
+    });
+    creditsDeducted = true;
 
-    if (userId && project) {
-      await prisma.project.update({
-        where: { id: project.id },
-        data: {
-          status: 'completed',
-          copyData: JSON.stringify(copyContent),
-          thumbnailUrl: generatedImages[0]?.url || null,
-        },
-      });
+    await prisma.project.update({
+      where: { id: project.id },
+      data: {
+        status: 'completed',
+        copyData: JSON.stringify(copyContent),
+        thumbnailUrl: generatedImages[0]?.url || null,
+      },
+    });
 
-      deductResult = await deductCredits(userId, 'full_pipeline', {
-        taskId: task?.id,
-        projectId: project.id,
-        description: `AI生成 ${generatedImages.length} 张图片 + 文案`,
-      });
-    }
-
-    if (task) {
-      await prisma.task.update({
-        where: { id: task.id },
-        data: {
-          status: 'completed',
-          progress: 100,
-          stage: 'COMPLETED',
-          message: '全部生成完成',
-          result: JSON.stringify({
-            images: generatedImages,
-            copy: copyContent,
-            analysis: {
-              productName: analysis.productName,
-              category: analysis.category,
-              color: analysis.color,
-              material: analysis.material,
-              style: analysis.style,
-            },
-          }),
-          completedAt: new Date(),
-        },
-      });
-    }
+    await prisma.task.update({
+      where: { id: task.id },
+      data: {
+        status: 'completed',
+        progress: 100,
+        stage: 'COMPLETED',
+        message: '全部生成完成',
+        result: JSON.stringify({
+          images: generatedImages,
+          copy: copyContent,
+          analysis: {
+            productName: analysis.productName,
+            category: analysis.category,
+            color: analysis.color,
+            material: analysis.material,
+            style: analysis.style,
+          },
+          creditsUsed: estimatedCredits,
+        }),
+        completedAt: new Date(),
+      },
+    });
 
     logger.info('[Generate API] 生成完成', {
-      projectId: project?.id,
+      projectId: project.id,
       imageCount: generatedImages.length,
+      creditsUsed: estimatedCredits,
     });
 
     return NextResponse.json({
       success: true,
-      projectId: project?.id || null,
-      taskId: task?.id || null,
+      projectId: project.id,
+      taskId: task.id,
       analysis: {
         productName: analysis.productName,
         category: analysis.category,
@@ -443,33 +428,42 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     const errorMessage = (error as Error).message;
-    logger.error('[Generate API] 执行失败', { error: errorMessage, projectId: project?.id });
+    logger.error('[Generate API] 执行失败', { error: errorMessage, projectId: project.id });
 
-    if (project) {
-      await prisma.project.update({
-        where: { id: project.id },
-        data: { status: 'failed' },
-      }).catch(() => {});
+    try {
+      if (creditsDeducted) {
+        await refundCredits(userId, estimatedCredits, {
+          taskId: task.id,
+          projectId: project.id,
+          description: `生成失败退回：${errorMessage}`,
+        });
+        logger.info('[Generate API] 积分已退回', { userId, amount: estimatedCredits });
+      }
+    } catch (refundErr) {
+      logger.error('[Generate API] 积分退回失败', { error: (refundErr as Error).message });
     }
 
-    if (task) {
-      await prisma.task.update({
-        where: { id: task.id },
-        data: {
-          status: 'failed',
-          stage: 'FAILED',
-          message: `生成失败：${errorMessage}`,
-          error: errorMessage,
-          completedAt: new Date(),
-        },
-      }).catch(() => {});
-    }
+    await prisma.project.update({
+      where: { id: project.id },
+      data: { status: 'failed' },
+    }).catch(() => {});
+
+    await prisma.task.update({
+      where: { id: task.id },
+      data: {
+        status: 'failed',
+        stage: 'FAILED',
+        message: `生成失败：${errorMessage}`,
+        error: errorMessage,
+        completedAt: new Date(),
+      },
+    }).catch(() => {});
 
     return NextResponse.json({
       success: false,
       error: errorMessage,
-      projectId: project?.id || null,
-      taskId: task?.id || null,
+      projectId: project.id,
+      taskId: task.id,
     }, { status: 500 });
   }
 }

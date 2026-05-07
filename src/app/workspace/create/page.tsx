@@ -44,26 +44,41 @@ const defaultSettings: GenerationSettingsState = {
   detailDesc: "",
 };
 
+function getAuthToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("auth_token");
+}
+
 async function uploadImage(file: File): Promise<string> {
+  const token = getAuthToken();
+
   const formData = new FormData();
   formData.append("image", file);
 
   const res = await fetch("/api/upload-image", {
     method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
   });
 
+  if (res.status === 401) {
+    throw new Error("请先登录");
+  }
+
+  const err = await res.json().catch(() => ({ error: "上传失败" }));
+
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: "上传失败" }));
+    if (res.status === 503) {
+      throw new Error("存储服务未配置，请联系管理员");
+    }
     throw new Error(err.error || "上传失败");
   }
 
-  const data = await res.json();
-  if (!data.success || !data.imageUrl) {
-    throw new Error(data.error || "上传失败，未获取到图片地址");
+  if (!err.success || !err.imageUrl) {
+    throw new Error(err.error || "上传失败，未获取到图片地址");
   }
 
-  return data.imageUrl;
+  return err.imageUrl;
 }
 
 export default function CreateProjectPage() {
@@ -79,6 +94,13 @@ export default function CreateProjectPage() {
 
   const handleAnalyze = async () => {
     if (productImages.length === 0) return;
+
+    const token = getAuthToken();
+    if (!token) {
+      setError("请先登录后再使用 AI 生成功能");
+      setTimeout(() => router.push("/login"), 1500);
+      return;
+    }
 
     setIsAnalyzing(true);
     setError(null);
@@ -101,7 +123,7 @@ export default function CreateProjectPage() {
           try {
             const url = await uploadImage(img.file);
             competitorImageUrls.push(url);
-          } catch {
+          } catch (uploadErr) {
             setStatusText("竞品图上传失败，将跳过竞品参考...");
           }
         }
@@ -112,7 +134,10 @@ export default function CreateProjectPage() {
 
       const workflowRes = await fetch("/api/workflow/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           productImageUrls,
           competitorImageUrls,
@@ -138,6 +163,12 @@ export default function CreateProjectPage() {
           detailDesc: settings.detailDesc,
         }),
       });
+
+      if (workflowRes.status === 401) {
+        setError("登录已过期，请重新登录");
+        setTimeout(() => router.push("/login"), 1500);
+        return;
+      }
 
       const workflowData = await workflowRes.json();
 
@@ -168,6 +199,30 @@ export default function CreateProjectPage() {
           platform: workflowData.platform,
           creditsUsed: workflowData.creditsUsed,
           balance: workflowData.balance,
+          config: {
+            productImageUrls,
+            competitorImageUrls,
+            competitorReferenceModes,
+            platform: settings.platform,
+            language: settings.language,
+            model: settings.model,
+            outputTypes: settings.outputTypes,
+            mainImageCount: settings.mainImageCount,
+            subImageCount: settings.subImageCount,
+            detailImageCount: settings.detailImageCount,
+            detailModuleCount: settings.detailModuleCount,
+            sizePreset: settings.sizePreset,
+            quality: settings.quality,
+            visualStyle: settings.visualStyle,
+            pricePositioning: settings.pricePositioning,
+            postProcessingOptions: settings.postProcessingOptions,
+            copyIntensity: settings.copyIntensity,
+            targetAudiences: settings.targetAudiences,
+            usageScenarios: settings.usageScenarios,
+            subjectConsistency: settings.subjectConsistency,
+            subjectLockRules: settings.subjectLockRules,
+            detailDesc: settings.detailDesc,
+          },
         })
       );
 

@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Upload,
   X,
@@ -85,6 +86,7 @@ const CATEGORY_MAP: Record<string, string> = {
 };
 
 export default function CreatePage() {
+  const router = useRouter();
   const [step, setStep] = useState<Step>("upload");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -120,6 +122,13 @@ export default function CreatePage() {
 
   const startAnalysis = async () => {
     if (!imageFile) return;
+
+    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
     setStep("analyzing");
 
     try {
@@ -127,6 +136,7 @@ export default function CreatePage() {
       formData.append("image", imageFile);
       const uploadRes = await fetch("/api/upload-image", {
         method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
       const uploadData = await uploadRes.json();
@@ -134,7 +144,10 @@ export default function CreatePage() {
 
       const res = await fetch("/api/workflow/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           productImageUrls: [uploadedUrl],
           competitorImageUrls: [],
@@ -181,9 +194,18 @@ export default function CreatePage() {
     setGeneratingMessage("正在识别商品信息...");
 
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
       const res = await fetch("/api/workflow/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           productImageUrls: [imagePreview],
           competitorImageUrls: [],

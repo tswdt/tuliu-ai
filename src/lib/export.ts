@@ -17,7 +17,7 @@ export async function createExport(input: CreateExportInput) {
     const action = input.format === 'zip' ? 'export_batch' : input.format === 'long-image' ? 'export_long_image' : 'export_single';
     const cost = getCreditCost(action);
 
-    const creditCheck = await deductCredits(input.userId, action, {
+    const creditCheck = await deductCredits(input.userId, cost, {
       projectId: input.projectId,
       description: `导出 ${input.format}`,
     });

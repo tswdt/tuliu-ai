@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sparkles, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { Sparkles, Mail, Lock, User, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [passwordError, setPasswordError] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -32,12 +33,32 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      console.log("注册数据:", formData);
-      setTimeout(() => {
-        router.push("/workspace/create");
-      }, 1000);
-    } catch (error) {
-      console.error("注册失败:", error);
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "register-email",
+          email: formData.email,
+          password: formData.password,
+          name: formData.name,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setError(data.error || "注册失败，请重试");
+        return;
+      }
+
+      if (data.token) {
+        localStorage.setItem("auth_token", data.token);
+        localStorage.setItem("auth_user", JSON.stringify(data.user));
+      }
+
+      router.push("/workspace/create");
+    } catch {
+      setError("网络错误，请重试");
     } finally {
       setLoading(false);
     }
@@ -60,6 +81,12 @@ export default function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="bg-[#fef2f2] border border-[#fecaca] rounded-xl p-3 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-[#ef4444] flex-shrink-0" />
+              <p className="text-[13px] text-[#991b1b]">{error}</p>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="name" className="text-[14px] text-[#666] font-medium">用户名</Label>
             <div className="relative">

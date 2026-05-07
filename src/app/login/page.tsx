@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sparkles, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Sparkles, Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -20,13 +21,34 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
+
     try {
-      console.log("登录数据:", formData);
-      setTimeout(() => {
-        router.push("/workspace/create");
-      }, 1000);
-    } catch (error) {
-      console.error("登录失败:", error);
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "login-email",
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setError(data.error || "登录失败，请重试");
+        return;
+      }
+
+      if (data.token) {
+        localStorage.setItem("auth_token", data.token);
+        localStorage.setItem("auth_user", JSON.stringify(data.user));
+      }
+
+      router.push("/workspace/create");
+    } catch {
+      setError("网络错误，请重试");
     } finally {
       setLoading(false);
     }
@@ -47,6 +69,13 @@ export default function LoginPage() {
           <h1 className="text-[24px] font-bold text-[#1d1d1f]">欢迎回来</h1>
           <p className="text-[14px] text-[#86868b] mt-1">登录您的账户继续使用</p>
         </div>
+
+        {error && (
+          <div className="mb-4 bg-[#fef2f2] border border-[#fecaca] rounded-xl p-3 flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-[#ef4444] flex-shrink-0" />
+            <p className="text-[13px] text-[#991b1b]">{error}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

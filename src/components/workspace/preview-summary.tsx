@@ -178,9 +178,14 @@ export default function PreviewSummary({
     parseInt(settings.mainImageCount || "0") +
     parseInt(settings.subImageCount || "0") +
     parseInt(settings.detailImageCount || "0") +
-    parseInt(settings.detailModuleCount || "0");
+    (settings.outputTypes.includes("detail-long") ? parseInt(settings.detailModuleCount || "0") : 0);
 
-  const estimatedCredits = totalImages * 2;
+  const is4K = settings.quality === "4k";
+  const recognitionCost = 1;
+  const imageCost = totalImages * 2;
+  const fourKExtra = is4K ? totalImages * 2 : 0;
+  const copyCost = 1;
+  const estimatedCredits = recognitionCost + imageCost + fourKExtra + copyCost;
 
   return (
     <div className="bg-white rounded-2xl border border-[#e5e5e5] p-5 sticky top-16">
@@ -288,7 +293,10 @@ export default function PreviewSummary({
               <span className="text-[15px] font-bold text-[#1d1d1f]">{estimatedCredits}</span>
             </div>
           </div>
-          <p className="text-[11px] text-[#999] mt-1">* 积分为预估值，实际以生成结果为准</p>
+          <p className="text-[11px] text-[#999] mt-1">
+            识别1 + 图片{totalImages}×2{is4K ? ` + 4K×${fourKExtra}` : ""} + 文案1
+          </p>
+          <p className="text-[11px] text-[#999]">* 积分为预估值，实际以生成结果为准</p>
         </div>
       </div>
     </div>

@@ -117,15 +117,31 @@ function ResultContent() {
       return;
     }
 
+    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+    if (!token) {
+      setRegenerateError("请先登录");
+      setTimeout(() => router.push("/login"), 1500);
+      return;
+    }
+
     setIsRegenerating(true);
     setRegenerateError(null);
 
     try {
       const res = await fetch("/api/workflow/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(config),
       });
+
+      if (res.status === 401) {
+        setRegenerateError("登录已过期，请重新登录");
+        setTimeout(() => router.push("/login"), 1500);
+        return;
+      }
 
       const data = await res.json();
 
