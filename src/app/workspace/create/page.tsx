@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles } from "lucide-react";
+import { Sparkles, AlertCircle, Loader2 } from "lucide-react";
 import UploadPanel from "@/components/workspace/upload-panel";
 import GenerationSettings, {
   type GenerationSettingsState,
@@ -16,8 +16,8 @@ interface ImageItem {
 
 const steps = [
   { id: 1, label: "输入" },
-  { id: 2, label: "分析中" },
-  { id: 3, label: "确认规划" },
+  { id: 2, label: "上传中" },
+  { id: 3, label: "分析中" },
   { id: 4, label: "生成中" },
   { id: 5, label: "完成" },
 ];
@@ -44,6 +44,28 @@ const defaultSettings: GenerationSettingsState = {
   detailDesc: "",
 };
 
+async function uploadImage(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const res = await fetch("/api/upload-image", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "上传失败" }));
+    throw new Error(err.error || "上传失败");
+  }
+
+  const data = await res.json();
+  if (!data.success || !data.imageUrl) {
+    throw new Error(data.error || "上传失败，未获取到图片地址");
+  }
+
+  return data.imageUrl;
+}
+
 export default function CreateProjectPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -52,19 +74,110 @@ export default function CreateProjectPage() {
   const [competitorReferenceModes, setCompetitorReferenceModes] = useState<string[]>([]);
   const [settings, setSettings] = useState<GenerationSettingsState>(defaultSettings);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [statusText, setStatusText] = useState<string>("");
 
   const handleAnalyze = async () => {
     if (productImages.length === 0) return;
+
     setIsAnalyzing(true);
-    setCurrentStep(2);
-    await new Promise((r) => setTimeout(r, 2000));
-    setCurrentStep(3);
-    await new Promise((r) => setTimeout(r, 1000));
-    setCurrentStep(4);
-    await new Promise((r) => setTimeout(r, 2000));
-    setCurrentStep(5);
-    setIsAnalyzing(false);
-    router.push("/workspace/result");
+    setError(null);
+    setCurrentStep(1);
+
+    try {
+      setCurrentStep(2);
+      setStatusText("正在上传产品图...");
+
+      const productImageUrls: string[] = [];
+      for (const img of productImages) {
+        const url = await uploadImage(img.file);
+        productImageUrls.push(url);
+      }
+
+      const competitorImageUrls: string[] = [];
+      if (competitorImages.length > 0) {
+        setStatusText("正在上传竞品参考图...");
+        for (const img of competitorImages) {
+          try {
+            const url = await uploadImage(img.file);
+            competitorImageUrls.push(url);
+          } catch {
+            setStatusText("竞品图上传失败，将跳过竞品参考...");
+          }
+        }
+      }
+
+      setCurrentStep(3);
+      setStatusText("正在提交 AI 分析...");
+
+      const workflowRes = await fetch("/api/workflow/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productImageUrls,
+          competitorImageUrls,
+          competitorReferenceModes,
+          platform: settings.platform,
+          language: settings.language,
+          model: settings.model,
+          outputTypes: settings.outputTypes,
+          mainImageCount: settings.mainImageCount,
+          subImageCount: settings.subImageCount,
+          detailImageCount: settings.detailImageCount,
+          detailModuleCount: settings.detailModuleCount,
+          sizePreset: settings.sizePreset,
+          quality: settings.quality,
+          visualStyle: settings.visualStyle,
+          pricePositioning: settings.pricePositioning,
+          postProcessingOptions: settings.postProcessingOptions,
+          copyIntensity: settings.copyIntensity,
+          targetAudiences: settings.targetAudiences,
+          usageScenarios: settings.usageScenarios,
+          subjectConsistency: settings.subjectConsistency,
+          subjectLockRules: settings.subjectLockRules,
+          detailDesc: settings.detailDesc,
+        }),
+      });
+
+      const workflowData = await workflowRes.json();
+
+      if (!workflowRes.ok || !workflowData.success) {
+        if (workflowRes.status === 503) {
+          throw new Error("AI 服务未配置：请设置 DASHSCOPE_API_KEY 或 SUCHUANG_API_KEY 环境变量");
+        }
+        if (workflowRes.status === 402) {
+          throw new Error(
+            `积分不足：${workflowData.detail || "余额不足，请充值后再试"}`
+          );
+        }
+        throw new Error(workflowData.error || "AI 处理失败，请稍后重试");
+      }
+
+      setCurrentStep(4);
+      setStatusText("AI 正在生成图片和文案...");
+
+      setCurrentStep(5);
+      setStatusText("生成完成！");
+
+      const resultParam = encodeURIComponent(
+        JSON.stringify({
+          projectId: workflowData.projectId,
+          analysis: workflowData.analysis,
+          images: workflowData.images,
+          copy: workflowData.copy,
+          platform: workflowData.platform,
+          creditsUsed: workflowData.creditsUsed,
+          balance: workflowData.balance,
+        })
+      );
+
+      router.push(`/workspace/result?result=${resultParam}`);
+    } catch (err) {
+      const message = (err as Error).message || "未知错误";
+      setError(message);
+      setCurrentStep(1);
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -137,6 +250,33 @@ export default function CreateProjectPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="max-w-[1400px] mx-auto px-3 sm:px-4 mb-4">
+          <div className="bg-[#fef2f2] border border-[#fecaca] rounded-xl p-4 flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-[#ef4444] flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-[14px] font-medium text-[#991b1b]">生成失败</p>
+              <p className="text-[13px] text-[#b91c1c] mt-1">{error}</p>
+              <button
+                onClick={() => setError(null)}
+                className="mt-2 text-[13px] text-[#991b1b] underline cursor-pointer hover:text-[#7f1d1d]"
+              >
+                关闭提示
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isAnalyzing && statusText && (
+        <div className="max-w-[1400px] mx-auto px-3 sm:px-4 mb-4">
+          <div className="bg-[#eff6ff] border border-[#bfdbfe] rounded-xl p-4 flex items-center gap-3">
+            <Loader2 className="h-5 w-5 text-[#3b82f6] animate-spin flex-shrink-0" />
+            <p className="text-[14px] text-[#1e40af]">{statusText}</p>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-[1400px] mx-auto px-3 sm:px-4 pb-8">
         <div className="flex flex-col lg:flex-row gap-4">
           <div className="w-full lg:w-[680px] flex-shrink-0 space-y-4">
@@ -162,8 +302,8 @@ export default function CreateProjectPage() {
             >
               {isAnalyzing ? (
                 <>
-                  <Sparkles className="h-4 w-4 animate-spin" />
-                  分析中...
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {statusText || "处理中..."}
                 </>
               ) : (
                 <>

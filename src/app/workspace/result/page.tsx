@@ -12,28 +12,14 @@ import {
   CheckCircle2,
   Copy,
   ExternalLink,
+  AlertCircle,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const platformNames: Record<string, string> = {
-  TAOBAO: "淘宝",
-  TMALL: "天猫",
-  JD: "京东",
-  PDD: "拼多多",
-  DOUYIN: "抖音",
-  XIAOHONGSHU: "小红书",
-  AMAZON: "Amazon",
-  TEMU: "Temu",
-  SHOPIFY: "Shopify",
-};
-
-const styleNames: Record<string, string> = {
-  SIMPLE: "简约",
-  LUXURY: "轻奢",
-  GUOCHAO: "国潮",
-  TECH: "科技",
-  NATURE: "自然",
-};
+import {
+  getOutputTypeLabel,
+  getPlatformLabel,
+} from "@/lib/prompt-builder";
 
 export default function ResultPage() {
   return (
@@ -46,28 +32,50 @@ export default function ResultPage() {
 function ResultContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const platform = searchParams.get("platform") || "TAOBAO";
-  const style = searchParams.get("style") || "SIMPLE";
 
-  let result: any = {};
+  let result: any = null;
+  let hasRealData = false;
+
   try {
     const resultStr = searchParams.get("result");
-    if (resultStr) result = JSON.parse(decodeURIComponent(resultStr));
+    if (resultStr) {
+      result = JSON.parse(decodeURIComponent(resultStr));
+      if (result && (result.images?.length > 0 || result.projectId)) {
+        hasRealData = true;
+      }
+    }
   } catch {}
 
-  const images = result.images || [
-    { type: "主图", url: "", prompt: "商品主图" },
-    { type: "场景图", url: "", prompt: "使用场景" },
-    { type: "细节图", url: "", prompt: "细节特写" },
-    { type: "卖点图", url: "", prompt: "核心卖点" },
-  ];
+  if (!hasRealData || !result) {
+    return (
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-8">
+        <div className="text-center py-16">
+          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-[#f5f5f7] mb-5">
+            <AlertCircle className="h-8 w-8 text-[#999]" />
+          </div>
+          <h2 className="text-[20px] font-semibold text-[#1d1d1f] mb-2">暂无生成结果</h2>
+          <p className="text-[14px] text-[#86868b] mb-6 max-w-md mx-auto leading-[1.6]">
+            您还没有生成任何商品图片。请前往创建页面，上传产品图并配置生成选项。
+          </p>
+          <Button
+            onClick={() => router.push("/workspace/create")}
+            className="bg-[#1d1d1f] text-white hover:bg-[#333] rounded-xl cursor-pointer interactive-button"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            开始生成
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
-  const copy = result.copy || {
-    title: "智能保温杯 · 12小时长效保温",
-    subtitle: "316不锈钢内胆 | LED温度显示",
-    sellingPoints: ["12小时长效保温", "LED智能温度显示", "316不锈钢内胆", "便携防漏设计"],
-    description: "采用316不锈钢内胆，12小时长效保温，LED智能温度显示，让您随时掌握饮品温度。便携防漏设计，适合办公、户外等多种场景。",
-  };
+  const images = result.images || [];
+  const copy = result.copy || {};
+  const analysis = result.analysis || {};
+  const platform = result.platform || "TAOBAO";
+  const projectId = result.projectId;
+  const creditsUsed = result.creditsUsed;
+  const balance = result.balance;
 
   const imageColors = [
     "from-slate-100 to-gray-200",
@@ -78,24 +86,73 @@ function ResultContent() {
     "from-purple-100 to-fuchsia-100",
   ];
 
+  const handleDownload = async (imageUrl: string, fileName: string) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      window.open(imageUrl, "_blank");
+    }
+  };
+
+  const handleBatchDownload = async () => {
+    for (const img of images) {
+      if (img.url) {
+        await handleDownload(img.url, `${getOutputTypeLabel(img.type)}-${(img.index || 0) + 1}.jpg`);
+      }
+    }
+  };
+
+  const handleCopyText = (text: string) => {
+    navigator.clipboard.writeText(text).catch(() => {});
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4">
+      <button
+        onClick={() => router.push("/workspace/create")}
+        className="flex items-center gap-1.5 text-[14px] text-[#86868b] hover:text-[#1d1d1f] mb-4 cursor-pointer interactive-button"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        返回创建
+      </button>
+
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-[24px] font-bold text-[#1d1d1f]">生成结果</h1>
           <p className="text-[14px] text-[#86868b] mt-1">
-            {platformNames[platform] || platform} · {styleNames[style] || style} · 共 {images.length} 张图
+            {analysis.productName || "商品"} · {getPlatformLabel(platform)} · 共 {images.length} 张图
+            {creditsUsed !== undefined && (
+              <span className="ml-2 text-[#f59e0b]">· 消耗 {creditsUsed} 积分</span>
+            )}
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={() => router.push("/workspace/create")} className="border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] hover:border-[#ccc] rounded-xl cursor-pointer interactive-button">
+          <Button
+            variant="outline"
+            onClick={() => router.push("/workspace/create")}
+            className="border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] hover:border-[#ccc] rounded-xl cursor-pointer interactive-button"
+          >
             <Plus className="h-4 w-4 mr-2" />
             新建项目
           </Button>
-          <Button className="bg-[#1d1d1f] text-white hover:bg-[#333] rounded-xl cursor-pointer interactive-button">
-            <Download className="h-4 w-4 mr-2" />
-            批量下载
-          </Button>
+          {images.length > 0 && (
+            <Button
+              onClick={handleBatchDownload}
+              className="bg-[#1d1d1f] text-white hover:bg-[#333] rounded-xl cursor-pointer interactive-button"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              批量下载
+            </Button>
+          )}
         </div>
       </div>
 
@@ -120,46 +177,84 @@ function ResultContent() {
               <Image className="h-5 w-5 text-[#86868b]" />
               生成图片
             </h2>
-            <Button variant="outline" size="sm" className="border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] rounded-xl cursor-pointer">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push("/workspace/create")}
+              className="border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] rounded-xl cursor-pointer"
+            >
               <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
               重新生成
             </Button>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            {images.map((img: any, i: number) => (
-              <div key={i} className="bg-white rounded-2xl border border-[#e5e5e5] overflow-hidden group hover:shadow-md transition-shadow">
-                <div className={`aspect-square bg-gradient-to-br ${imageColors[i % imageColors.length]} flex items-center justify-center relative`}>
-                  {img.url ? (
-                    <img src={img.url} alt={img.type} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="text-center text-[#999]">
+
+          {images.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-[#e5e5e5] p-8 text-center">
+              <Image className="h-10 w-10 mx-auto mb-3 text-[#ccc]" />
+              <p className="text-[14px] text-[#999]">暂无生成图片</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              {images.map((img: any, i: number) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-2xl border border-[#e5e5e5] overflow-hidden group hover:shadow-md transition-shadow"
+                >
+                  <div className="aspect-square bg-gradient-to-br from-[#f5f5f7] to-[#e5e5e5] flex items-center justify-center relative">
+                    {img.url ? (
+                      <img
+                        src={img.url}
+                        alt={getOutputTypeLabel(img.type)}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                          (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden");
+                        }}
+                      />
+                    ) : null}
+                    <div className={`text-center text-[#999] ${img.url ? "hidden" : ""}`}>
                       <Image className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                      <span className="text-[14px] font-medium opacity-60">{img.type}</span>
+                      <span className="text-[14px] font-medium opacity-60">
+                        {getOutputTypeLabel(img.type)}
+                      </span>
                     </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="secondary" className="h-8 rounded-lg">
-                        <Download className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button size="sm" variant="secondary" className="h-8 rounded-lg">
-                        <Edit3 className="h-3.5 w-3.5" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="h-8 rounded-lg"
+                          onClick={() =>
+                            handleDownload(img.url, `${getOutputTypeLabel(img.type)}-${(img.index || 0) + 1}.jpg`)
+                          }
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="py-2 px-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[12px] font-medium text-[#1d1d1f]">
+                        {getOutputTypeLabel(img.type)} {img.index !== undefined ? `#${img.index + 1}` : ""}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-[12px] text-[#86868b] hover:text-[#1d1d1f] cursor-pointer"
+                        onClick={() =>
+                          handleDownload(img.url, `${getOutputTypeLabel(img.type)}-${(img.index || 0) + 1}.jpg`)
+                        }
+                      >
+                        <Download className="h-3 w-3 mr-1" />
+                        下载
                       </Button>
                     </div>
                   </div>
                 </div>
-                <div className="py-2 px-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[12px] font-medium text-[#1d1d1f]">{img.type}</span>
-                    <Button variant="ghost" size="sm" className="h-6 text-[12px] text-[#86868b] hover:text-[#1d1d1f] cursor-pointer">
-                      <Download className="h-3 w-3 mr-1" />
-                      下载
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -169,50 +264,103 @@ function ResultContent() {
               生成文案
             </h2>
             <div className="bg-white rounded-2xl border border-[#e5e5e5] p-4 space-y-4">
-              <div>
-                <label className="text-[12px] text-[#86868b]">主标题</label>
-                <p className="text-[14px] font-medium text-[#1d1d1f] mt-0.5">{copy.title}</p>
-              </div>
-              <div>
-                <label className="text-[12px] text-[#86868b]">副标题</label>
-                <p className="text-[14px] text-[#666] mt-0.5">{copy.subtitle}</p>
-              </div>
-              <div>
-                <label className="text-[12px] text-[#86868b]">核心卖点</label>
-                <div className="flex flex-wrap gap-1.5 mt-1">
-                  {copy.sellingPoints?.map((sp: string, i: number) => (
-                    <span key={i} className="px-2 py-0.5 rounded-full bg-[#f5f5f7] text-[#1d1d1f] text-[12px] border border-[#e5e5e5]">{sp}</span>
-                  ))}
-                </div>
-              </div>
-              {copy.description && (
-                <div>
-                  <label className="text-[12px] text-[#86868b]">产品描述</label>
-                  <p className="text-[14px] text-[#666] mt-0.5 leading-[1.6]">{copy.description}</p>
+              {copy.mainTitle ? (
+                <>
+                  <div>
+                    <label className="text-[12px] text-[#86868b]">主标题</label>
+                    <p className="text-[14px] font-medium text-[#1d1d1f] mt-0.5">{copy.mainTitle}</p>
+                  </div>
+                  <div>
+                    <label className="text-[12px] text-[#86868b]">副标题</label>
+                    <p className="text-[14px] text-[#666] mt-0.5">{copy.subTitle}</p>
+                  </div>
+                  {copy.coreSellingPoints?.length > 0 && (
+                    <div>
+                      <label className="text-[12px] text-[#86868b]">核心卖点</label>
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {copy.coreSellingPoints.map((sp: string, i: number) => (
+                          <span
+                            key={i}
+                            className="px-2 py-0.5 rounded-full bg-[#f5f5f7] text-[#1d1d1f] text-[12px] border border-[#e5e5e5]"
+                          >
+                            {sp}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {copy.productDetails && (
+                    <div>
+                      <label className="text-[12px] text-[#86868b]">产品描述</label>
+                      <p className="text-[14px] text-[#666] mt-0.5 leading-[1.6]">{copy.productDetails}</p>
+                    </div>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] hover:border-[#ccc] rounded-xl cursor-pointer"
+                    onClick={() =>
+                      handleCopyText(
+                        [copy.mainTitle, copy.subTitle, ...(copy.coreSellingPoints || [])].join("\n")
+                      )
+                    }
+                  >
+                    <Copy className="h-3.5 w-3.5 mr-1.5" />
+                    复制文案
+                  </Button>
+                </>
+              ) : (
+                <div className="text-center py-4">
+                  <FileText className="h-8 w-8 mx-auto mb-2 text-[#ccc]" />
+                  <p className="text-[14px] text-[#999]">暂无生成文案</p>
                 </div>
               )}
-              <Button variant="outline" size="sm" className="w-full border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] hover:border-[#ccc] rounded-xl cursor-pointer">
-                <Copy className="h-3.5 w-3.5 mr-1.5" />
-                复制文案
-              </Button>
             </div>
           </div>
 
           <div className="bg-white rounded-2xl border border-[#e5e5e5] p-4 space-y-3">
             <h3 className="text-[14px] font-semibold text-[#1d1d1f]">快捷操作</h3>
-            <Button variant="outline" size="sm" className="w-full justify-start border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] hover:border-[#ccc] rounded-xl cursor-pointer">
-              <Edit3 className="h-3.5 w-3.5 mr-2" />
-              编辑详情页
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] hover:border-[#ccc] rounded-xl cursor-pointer"
+              onClick={() => router.push("/workspace/create")}
+            >
+              <RefreshCw className="h-3.5 w-3.5 mr-2" />
+              重新生成
             </Button>
-            <Button variant="outline" size="sm" className="w-full justify-start border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] hover:border-[#ccc] rounded-xl cursor-pointer">
-              <ExternalLink className="h-3.5 w-3.5 mr-2" />
-              预览详情页
-            </Button>
-            <Button variant="outline" size="sm" className="w-full justify-start border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] hover:border-[#ccc] rounded-xl cursor-pointer">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-start border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] hover:border-[#ccc] rounded-xl cursor-pointer"
+              onClick={handleBatchDownload}
+              disabled={images.length === 0}
+            >
               <Download className="h-3.5 w-3.5 mr-2" />
-              导出 HTML
+              批量下载
             </Button>
+            {projectId && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] hover:border-[#ccc] rounded-xl cursor-pointer"
+                onClick={() => router.push(`/workspace/editor?projectId=${projectId}`)}
+              >
+                <Edit3 className="h-3.5 w-3.5 mr-2" />
+                编辑详情页
+              </Button>
+            )}
           </div>
+
+          {balance !== undefined && (
+            <div className="bg-white rounded-2xl border border-[#e5e5e5] p-4">
+              <p className="text-[12px] text-[#86868b]">剩余积分</p>
+              <p className="text-[18px] font-bold text-[#1d1d1f]">{balance}</p>
+              <p className="text-[11px] text-[#999] mt-1">
+                * 积分为 mock 预估值，未接入真实支付系统
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
