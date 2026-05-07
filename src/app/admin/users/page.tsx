@@ -26,7 +26,7 @@ const users = [
 const planColors: Record<string, string> = {
   "免费版": "bg-gray-100 text-gray-600",
   "基础版": "bg-blue-50 text-blue-600",
-  "专业版": "bg-violet-50 text-violet-600",
+  "专业版": "bg-[#f5f5f7] text-[#1d1d1f]",
   "企业版": "bg-amber-50 text-amber-600",
 };
 
@@ -46,7 +46,7 @@ export default function AdminUsersPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">用户管理</h1>
-        <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white">
+        <Button className="bg-[#1d1d1f] hover:bg-[#333] text-white">
           <Plus className="h-4 w-4 mr-2" />
           添加用户
         </Button>
@@ -60,7 +60,7 @@ export default function AdminUsersPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="搜索用户名或邮箱..."
-            className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+            className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -84,7 +84,7 @@ export default function AdminUsersPage() {
                 <tr key={u.id} className="border-b last:border-0 hover:bg-gray-50">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center text-white text-xs font-medium">
+                      <div className="h-8 w-8 rounded-full bg-[#1d1d1f] flex items-center justify-center text-white text-xs font-medium">
                         {u.name[0]}
                       </div>
                       <div>

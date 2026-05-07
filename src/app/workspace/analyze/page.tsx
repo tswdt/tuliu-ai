@@ -32,8 +32,8 @@ interface AnalysisResult {
 }
 
 export default function AnalyzePage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600" /></div>}>
+   return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1d1d1f]" /></div>}>
       <AnalyzeContent />
     </Suspense>
   );
@@ -86,15 +86,15 @@ function AnalyzeContent() {
       <div className="max-w-3xl mx-auto">
         <div className="flex flex-col items-center justify-center py-32">
           <div className="relative">
-            <div className="h-20 w-20 rounded-2xl bg-violet-100 flex items-center justify-center mb-6">
-              <Sparkles className="h-10 w-10 text-violet-600 animate-pulse" />
+            <div className="h-20 w-20 rounded-2xl bg-[#f5f5f7] flex items-center justify-center mb-6">
+              <Sparkles className="h-10 w-10 text-[#1d1d1f] animate-pulse" />
             </div>
-            <div className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-violet-600 flex items-center justify-center">
+            <div className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-[#1d1d1f] flex items-center justify-center">
               <Loader2 className="h-3.5 w-3.5 text-white animate-spin" />
             </div>
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">AI 正在识别商品信息</h2>
-          <p className="text-sm text-gray-500">正在分析产品图片，提取商品特征...</p>
+          <h2 className="text-[20px] font-semibold text-[#1d1d1f] mb-2">AI 正在识别商品信息</h2>
+          <p className="text-[14px] text-[#86868b]">正在分析产品图片，提取商品特征...</p>
         </div>
       </div>
     );
@@ -114,40 +114,40 @@ function AnalyzeContent() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">AI 识别结果</h1>
-        <p className="text-sm text-gray-500 mt-1">AI 已自动识别商品信息，请确认并补充</p>
+        <h1 className="text-[24px] font-bold text-[#1d1d1f]">AI 识别结果</h1>
+        <p className="text-[14px] text-[#86868b] mt-1">AI 已自动识别商品信息，请确认并补充</p>
       </div>
 
       <div className="mb-6">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-full bg-green-600 text-white flex items-center justify-center">
+            <div className="h-7 w-7 rounded-full bg-[#1d1d1f] text-white flex items-center justify-center">
               <CheckCircle2 className="h-4 w-4" />
             </div>
-            <span className="text-sm font-medium text-green-600">上传图片</span>
+            <span className="text-[14px] font-medium text-[#1d1d1f]">上传图片</span>
           </div>
-          <div className="h-px flex-1 bg-violet-300" />
+          <div className="h-px flex-1 bg-[#1d1d1f]" />
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-full bg-violet-600 text-white flex items-center justify-center text-xs font-bold">2</div>
-            <span className="text-sm font-medium text-violet-600">AI 识别</span>
+            <div className="h-7 w-7 rounded-full bg-[#1d1d1f] text-white flex items-center justify-center text-[12px] font-bold">2</div>
+            <span className="text-[14px] font-medium text-[#1d1d1f]">AI 识别</span>
           </div>
-          <div className="h-px flex-1 bg-gray-200" />
+          <div className="h-px flex-1 bg-[#e5e5e5]" />
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center text-xs font-bold">3</div>
-            <span className="text-sm text-gray-400">配置生成</span>
+            <div className="h-7 w-7 rounded-full bg-[#e5e5e5] text-[#999] flex items-center justify-center text-[12px] font-bold">3</div>
+            <span className="text-[14px] text-[#999]">配置生成</span>
           </div>
-          <div className="h-px flex-1 bg-gray-200" />
+          <div className="h-px flex-1 bg-[#e5e5e5]" />
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center text-xs font-bold">4</div>
-            <span className="text-sm text-gray-400">生成结果</span>
+            <div className="h-7 w-7 rounded-full bg-[#e5e5e5] text-[#999] flex items-center justify-center text-[12px] font-bold">4</div>
+            <span className="text-[14px] text-[#999]">生成结果</span>
           </div>
         </div>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-1">
-          <Card className="border-0 shadow-sm overflow-hidden">
-            <div className="aspect-square bg-gray-100">
+          <Card className="border border-[#e5e5e5] rounded-2xl overflow-hidden">
+            <div className="aspect-square bg-[#f5f5f7]">
               {imageUrl && <img src={imageUrl} alt="产品图" className="w-full h-full object-contain" />}
             </div>
           </Card>
@@ -156,27 +156,27 @@ function AnalyzeContent() {
         <div className="md:col-span-2 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             {infoCards.map((card, i) => (
-              <Card key={i} className="border-0 shadow-sm">
+              <Card key={i} className="border border-[#e5e5e5] rounded-2xl">
                 <CardContent className="py-3 px-4">
-                  <div className="flex items-center gap-2 text-gray-400 mb-1">
+                  <div className="flex items-center gap-2 text-[#86868b] mb-1">
                     {card.icon}
-                    <span className="text-xs">{card.label}</span>
+                    <span className="text-[12px]">{card.label}</span>
                   </div>
-                  <div className="text-sm font-medium text-gray-900">{card.value}</div>
+                  <div className="text-[14px] font-medium text-[#1d1d1f]">{card.value}</div>
                 </CardContent>
               </Card>
             ))}
           </div>
 
-          <Card className="border-0 shadow-sm">
+          <Card className="border border-[#e5e5e5] rounded-2xl">
             <CardContent className="py-3 px-4">
-              <div className="flex items-center gap-2 text-gray-400 mb-2">
+              <div className="flex items-center gap-2 text-[#86868b] mb-2">
                 <Sparkles className="h-4 w-4" />
-                <span className="text-xs">AI 推荐卖点</span>
+                <span className="text-[12px]">AI 推荐卖点</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {analysis.suggestedSellingPoints.map((sp, i) => (
-                  <span key={i} className="px-2.5 py-1 rounded-full bg-violet-50 text-violet-700 text-xs font-medium">
+                  <span key={i} className="px-2.5 py-1 rounded-full bg-[#f5f5f7] text-[#1d1d1f] text-[12px] font-medium border border-[#e5e5e5]">
                     {sp}
                   </span>
                 ))}
@@ -184,15 +184,15 @@ function AnalyzeContent() {
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-sm">
+          <Card className="border border-[#e5e5e5] rounded-2xl">
             <CardContent className="py-3 px-4">
-              <div className="flex items-center gap-2 text-gray-400 mb-2">
+              <div className="flex items-center gap-2 text-[#86868b] mb-2">
                 <Tag className="h-4 w-4" />
-                <span className="text-xs">使用场景</span>
+                <span className="text-[12px]">使用场景</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {analysis.usageScenarios.map((s, i) => (
-                  <span key={i} className="px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-xs">
+                  <span key={i} className="px-2.5 py-1 rounded-full bg-[#f5f5f7] text-[#666] text-[12px] border border-[#e5e5e5]">
                     {s}
                   </span>
                 ))}
@@ -203,13 +203,13 @@ function AnalyzeContent() {
       </div>
 
       <div className="flex items-center justify-between mt-8">
-        <Button variant="outline" onClick={() => router.push("/workspace/new")}>
+        <Button variant="outline" onClick={() => router.push("/workspace/new")} className="rounded-xl border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] hover:border-[#ccc] cursor-pointer">
           <ArrowLeft className="h-4 w-4 mr-2" />
           重新上传
         </Button>
         <Button
           onClick={() => router.push(`/workspace/configure?imageUrl=${encodeURIComponent(imageUrl)}&analysis=${encodeURIComponent(JSON.stringify(analysis))}`)}
-          className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white"
+          className="bg-[#1d1d1f] text-white hover:bg-[#333] rounded-xl cursor-pointer"
         >
           信息确认，下一步
           <ArrowRight className="h-4 w-4 ml-2" />

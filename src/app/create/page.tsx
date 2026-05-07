@@ -219,7 +219,7 @@ export default function CreatePage() {
         return (
           <div key={s.key} className="flex items-center">
             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              isActive ? "bg-violet-100 text-violet-700" : isDone ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400"
+              isActive ? "bg-[#f5f5f7] text-[#1d1d1f]" : isDone ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-400"
             }`}>
               {isDone ? <CheckCircle2 className="h-4 w-4" /> : s.icon}
               {s.label}
@@ -237,10 +237,10 @@ export default function CreatePage() {
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
+              <div className="h-7 w-7 rounded-lg bg-[#1d1d1f] flex items-center justify-center">
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
-              <span className="font-bold text-gray-900">图流 AI</span>
+              <span className="font-bold text-gray-900">燎原 AI</span>
             </Link>
             <span className="text-gray-300">|</span>
             <span className="text-sm text-gray-500">
@@ -266,10 +266,10 @@ export default function CreatePage() {
             </div>
 
             {!imagePreview ? (
-              <label className="flex flex-col items-center justify-center w-full h-72 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer hover:border-violet-400 hover:bg-violet-50/30 transition-all group">
+              <label className="flex flex-col items-center justify-center w-full h-72 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer hover:border-[#999] hover:bg-[#f5f5f7]/30 transition-all group">
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <div className="h-16 w-16 rounded-2xl bg-violet-100 flex items-center justify-center mb-4 group-hover:bg-violet-200 transition-colors">
-                    <Upload className="h-8 w-8 text-violet-600" />
+                  <div className="h-16 w-16 rounded-2xl bg-[#f5f5f7] flex items-center justify-center mb-4 group-hover:bg-[#eee] transition-colors">
+                    <Upload className="h-8 w-8 text-[#1d1d1f]" />
                   </div>
                   <p className="text-lg font-medium text-gray-700 mb-1">点击上传或拖拽图片到此处</p>
                   <p className="text-sm text-gray-400">支持 JPG / PNG / WebP，最大 10MB</p>
@@ -287,7 +287,7 @@ export default function CreatePage() {
 
             <Button
               size="lg"
-              className="w-full mt-6 h-12 text-base bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-lg shadow-violet-200"
+              className="w-full mt-6 h-12 text-base bg-[#1d1d1f] hover:bg-[#333] text-white shadow-lg"
               onClick={startAnalysis}
               disabled={!imageFile}
             >
@@ -300,12 +300,12 @@ export default function CreatePage() {
 
         {step === "analyzing" && (
           <div className="max-w-md mx-auto text-center py-20">
-            <div className="h-20 w-20 rounded-3xl bg-violet-100 flex items-center justify-center mx-auto mb-6 animate-pulse">
-              <Wand2 className="h-10 w-10 text-violet-600" />
+            <div className="h-20 w-20 rounded-3xl bg-[#f5f5f7] flex items-center justify-center mx-auto mb-6 animate-pulse">
+              <Wand2 className="h-10 w-10 text-[#1d1d1f]" />
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">AI 正在识别商品...</h2>
             <p className="text-gray-500">正在分析商品名称、材质、颜色、卖点等信息</p>
-            <Loader2 className="h-8 w-8 text-violet-600 animate-spin mx-auto mt-6" />
+            <Loader2 className="h-8 w-8 text-[#1d1d1f] animate-spin mx-auto mt-6" />
           </div>
         )}
 
@@ -367,7 +367,7 @@ export default function CreatePage() {
                           onClick={() => setSelectedPlatform(p.id)}
                           className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
                             selectedPlatform === p.id
-                              ? "border-violet-500 bg-violet-50 shadow-sm"
+                              ? "border-[#1d1d1f] bg-[#f5f5f7] shadow-sm"
                               : "border-gray-200 hover:border-gray-300"
                           }`}
                         >
@@ -391,7 +391,7 @@ export default function CreatePage() {
                           onClick={() => setSelectedStyle(s.id)}
                           className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
                             selectedStyle === s.id
-                              ? "border-violet-500 bg-violet-50 shadow-sm"
+                              ? "border-[#1d1d1f] bg-[#f5f5f7] shadow-sm"
                               : "border-gray-200 hover:border-gray-300"
                           }`}
                         >
@@ -438,7 +438,7 @@ export default function CreatePage() {
                   </Button>
                   <Button
                     size="lg"
-                    className="flex-1 h-12 text-base bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-lg shadow-violet-200"
+                    className="flex-1 h-12 text-base bg-[#1d1d1f] hover:bg-[#333] text-white shadow-lg"
                     onClick={startGeneration}
                     disabled={!editableName || sellingPoints.length === 0}
                   >
@@ -453,15 +453,15 @@ export default function CreatePage() {
 
         {step === "generating" && (
           <div className="max-w-lg mx-auto text-center py-16">
-            <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center mx-auto mb-8">
-              <Sparkles className="h-12 w-12 text-violet-600 animate-pulse" />
+            <div className="h-24 w-24 rounded-3xl bg-[#f5f5f7] flex items-center justify-center mx-auto mb-8">
+              <Sparkles className="h-12 w-12 text-[#1d1d1f] animate-pulse" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">AI 正在生成...</h2>
             <p className="text-gray-500 mb-8">{generatingMessage}</p>
             <div className="w-full max-w-sm mx-auto">
               <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full transition-all duration-500"
+                  className="h-full bg-[#1d1d1f] rounded-full transition-all duration-500"
                   style={{ width: `${generatingProgress}%` }}
                 />
               </div>
@@ -566,7 +566,7 @@ export default function CreatePage() {
 
                 <Card>
                   <CardContent className="pt-6 space-y-3">
-                    <Button className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white" onClick={() => {
+                    <Button className="w-full bg-[#1d1d1f] hover:bg-[#333] text-white" onClick={() => {
                       setStep("configure");
                       setGeneratedImages([]);
                       setCopyContent(null);

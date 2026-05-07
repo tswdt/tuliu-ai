@@ -1,1202 +1,412 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import Link from "next/link";
 import {
-  Upload,
-  X,
-  Image as ImageIcon,
-  ArrowRight,
-  ArrowLeft,
   Sparkles,
-  FileImage,
-  Camera,
+  ArrowRight,
+  Upload,
+  Wand2,
   Layers,
+  Camera,
   ZoomIn,
   Square,
-  LayoutGrid,
-  Eye,
-  CheckCircle2,
-  Loader2,
-  Package,
-  Tag,
-  Palette,
-  Type,
-  Ruler,
-  Star,
-  Users,
-  MapPin,
-  Ban,
-  Store,
-  ShoppingCart,
-  Globe,
-  Wine,
-  Shirt,
-  Cpu,
-  Flower2,
-  Home as HomeIcon,
+  FileImage,
+  Check,
+  X,
+  ChevronDown,
   Zap,
-  Leaf,
-  Baby,
-  BadgePercent,
-  Award,
-  TrendingUp,
-  Minus,
-  Languages,
-  Hash,
-  Maximize2,
-  Crown,
-  Scale,
-  Flame,
-  Gift,
-  FileText,
-  ListChecks,
   Target,
-  Megaphone,
-  Scissors,
-  Eraser,
-  Copy,
-  Monitor,
+  Palette,
+  Brain,
+  Store,
+  Globe,
+  Award,
+  ShoppingCart,
+  BadgePercent,
+  Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-
-const STEPS = [
-  "选择生成方式",
-  "上传图片",
-  "AI 识别结果",
-  "确认商品资料",
-  "选择平台",
-  "选择生成内容",
-  "选择风格",
-  "语言选择",
-  "张数选择",
-  "尺寸/比例",
-  "价格定位",
-  "文案强度",
-  "输出质量",
-  "后期处理",
-  "生成",
-];
-
-const generationModes = [
-  { id: "detail", label: "上传产品图生成详情页", desc: "一键生成完整详情页", icon: LayoutGrid, color: "bg-violet-50 text-violet-600 border-violet-200" },
-  { id: "competitor", label: "上传竞品图参考风格", desc: "参考竞品视觉风格", icon: Eye, color: "bg-blue-50 text-blue-600 border-blue-200" },
-  { id: "main", label: "生成商品主图", desc: "生成平台主图", icon: Camera, color: "bg-amber-50 text-amber-600 border-amber-200" },
-  { id: "detail-img", label: "生成产品细节图", desc: "放大展示产品细节", icon: ZoomIn, color: "bg-emerald-50 text-emerald-600 border-emerald-200" },
-  { id: "white", label: "生成白底图", desc: "符合平台白底图规范", icon: Square, color: "bg-gray-50 text-gray-600 border-gray-200" },
-  { id: "template", label: "从模板开始", desc: "选择品类模板快速开始", icon: FileImage, color: "bg-pink-50 text-pink-600 border-pink-200" },
-];
 
 const platforms = [
-  { id: "taobao", name: "淘宝", desc: "视觉偏转化，卖点清晰，信息密度中等", color: "#FF4400", icon: ShoppingCart, visualStyle: "转化导向", emphasis: ["产品优势", "使用场景", "细节展示"], defaultTypes: ["main", "sub", "selling", "detail", "params", "long"], recommendedStyle: "taobao-convert" },
-  { id: "jd", name: "京东", desc: "品质专业，参数清晰，页面克制", color: "#E4393C", icon: Award, visualStyle: "品质专业", emphasis: ["品牌", "规格", "品质", "售后"], defaultTypes: ["main", "params", "detail", "scene"], recommendedStyle: "jd-quality" },
-  { id: "pdd", name: "拼多多", desc: "直接促销，利益点突出，文案醒目", color: "#E02E24", icon: BadgePercent, visualStyle: "直接促销", emphasis: ["价格", "优惠", "卖点强刺激"], defaultTypes: ["main", "selling", "scene", "sub"], recommendedStyle: "pdd-sale" },
-  { id: "douyin", name: "抖音", desc: "视觉冲击强，文案短强记忆点", color: "#161823", icon: Zap, visualStyle: "视觉冲击", emphasis: ["短视频封面", "商品卡片", "强记忆点"], defaultTypes: ["main", "scene", "sub", "selling"], recommendedStyle: "taobao-convert" },
-  { id: "amazon", name: "亚马逊", desc: "画面简洁，参数规范，少营销文字", color: "#FF9900", icon: Globe, visualStyle: "简洁规范", emphasis: ["白底图", "场景图", "尺寸图", "A+模块"], defaultTypes: ["white", "sub", "params", "scene", "long"], recommendedStyle: "amazon-a" },
-  { id: "shopify", name: "Shopify", desc: "品牌调性，专业品质，独立站风格", color: "#95BF47", icon: Store, visualStyle: "品牌调性", emphasis: ["品牌形象", "产品特性", "品质感"], defaultTypes: ["main", "scene", "detail", "selling", "long"], recommendedStyle: "minimal" },
+  { id: "taobao", name: "淘宝", color: "#FF4400", icon: ShoppingCart },
+  { id: "jd", name: "京东", color: "#E4393C", icon: Award },
+  { id: "pdd", name: "拼多多", color: "#E02E24", icon: BadgePercent },
+  { id: "douyin", name: "抖音", color: "#161823", icon: Zap },
+  { id: "amazon", name: "亚马逊", color: "#FF9900", icon: Globe },
+  { id: "shopify", name: "Shopify", color: "#95BF47", icon: Store },
 ];
 
-const contentTypes = [
-  { id: "main", label: "主图", desc: "商品展示主图" },
-  { id: "sub", label: "附图", desc: "多角度展示图" },
-  { id: "white", label: "白底图", desc: "纯白背景图" },
-  { id: "scene", label: "场景图", desc: "使用场景展示" },
-  { id: "detail", label: "细节图", desc: "局部细节放大" },
-  { id: "selling", label: "卖点图", desc: "核心卖点提炼" },
-  { id: "params", label: "参数图", desc: "规格参数展示" },
-  { id: "long", label: "详情页长图", desc: "完整详情页" },
+const showcaseItems = [
+  { title: "萌宠食品", subtitle: "冻干肉棒", gradient: "from-green-100 to-emerald-50" },
+  { title: "美妆护肤", subtitle: "3D 雕塑大师", gradient: "from-rose-100 to-pink-50" },
+  { title: "箱包", subtitle: "进口植软牛皮", gradient: "from-stone-100 to-orange-50" },
+  { title: "烘焙食品", subtitle: "全麦坚果欧包", gradient: "from-amber-100 to-yellow-50" },
 ];
 
-const styles = [
-  { id: "minimal", label: "高级简约", desc: "留白多、字体少、质感强", color: "from-gray-100 to-gray-50" },
-  { id: "tech", label: "科技感", desc: "深色背景、光效、数据感", color: "from-blue-900 to-indigo-800" },
-  { id: "chinese", label: "中式传统", desc: "国风元素、书法字体", color: "from-red-800 to-amber-700" },
-  { id: "fresh", label: "清新自然", desc: "浅色调、自然元素、柔和", color: "from-green-100 to-emerald-50" },
-  { id: "baby", label: "母婴温柔", desc: "粉色调、圆润、温暖", color: "from-pink-100 to-rose-50" },
-  { id: "pdd-sale", label: "拼多多促销风", desc: "大红大紫、价格突出、紧迫感", color: "from-red-600 to-orange-500" },
-  { id: "jd-quality", label: "京东品质风", desc: "简洁大气、品质感、参数清晰", color: "from-slate-700 to-gray-600" },
-  { id: "taobao-convert", label: "淘宝转化风", desc: "卖点突出、色彩丰富、引导下单", color: "from-violet-600 to-fuchsia-500" },
-  { id: "amazon-a", label: "亚马逊 A+ 简洁风", desc: "白底为主、图文清晰、信息直白", color: "from-gray-50 to-white" },
+const comparisonData = [
+  { feature: "出图速度", traditional: "3-7 天", picset: "3 分钟" },
+  { feature: "设计成本", traditional: "¥500-2000/套", picset: "¥0 起" },
+  { feature: "风格统一性", traditional: "依赖设计师水平", picset: "AI 自动统一风格" },
+  { feature: "多平台适配", traditional: "需分别设计", picset: "一键多平台适配" },
+  { feature: "修改迭代", traditional: "反复沟通修改", picset: "即时调整即时生成" },
+  { feature: "专业门槛", traditional: "需专业设计能力", picset: "零门槛上手" },
 ];
 
-const languages = [
-  { id: "zh-CN", label: "中文简体", flag: "🇨🇳" },
-  { id: "zh-TW", label: "中文繁体", flag: "🇹🇼" },
-  { id: "en", label: "English", flag: "🇺🇸" },
-  { id: "ja", label: "日本語", flag: "🇯🇵" },
-  { id: "ko", label: "한국어", flag: "🇰🇷" },
-  { id: "de", label: "Deutsch", flag: "🇩🇪" },
-  { id: "fr", label: "Français", flag: "🇫🇷" },
-  { id: "es", label: "Español", flag: "🇪🇸" },
-  { id: "ru", label: "Русский", flag: "🇷🇺" },
+const advantages = [
+  {
+    icon: Brain,
+    title: "AI 智能识别",
+    desc: "上传产品图后，AI 自动识别品类、材质、颜色、卖点，无需手动填写商品信息。",
+    bg: "bg-[#f5f5f7]",
+    border: "border-[#e5e5e5]",
+    iconColor: "text-[#1d1d1f]",
+  },
+  {
+    icon: Target,
+    title: "平台规则适配",
+    desc: "内置淘宝、京东、拼多多、抖音、亚马逊等平台视觉规范，自动匹配最佳呈现方式。",
+    bg: "bg-cyan-50",
+    border: "border-cyan-200",
+    iconColor: "text-cyan-600",
+  },
+  {
+    icon: Palette,
+    title: "多风格一键切换",
+    desc: "高级简约、科技感、中式传统、清新自然等 9 种风格，一键切换预览效果。",
+    bg: "bg-amber-50",
+    border: "border-amber-200",
+    iconColor: "text-amber-600",
+  },
+  {
+    icon: Zap,
+    title: "全流程自动化",
+    desc: "从上传到出图全流程自动化，主图、细节图、参数图、详情页一键生成。",
+    bg: "bg-emerald-50",
+    border: "border-emerald-200",
+    iconColor: "text-emerald-600",
+  },
 ];
 
-const sizeOptions = [
-  { id: "1:1", label: "1:1 商品主图", desc: "800×800px", w: 800, h: 800 },
-  { id: "3:4", label: "3:4 竖版详情图", desc: "600×800px", w: 600, h: 800 },
-  { id: "4:5", label: "4:5 电商图", desc: "640×800px", w: 640, h: 800 },
-  { id: "9:16", label: "9:16 抖音竖图", desc: "450×800px", w: 450, h: 800 },
-  { id: "750px", label: "750px 淘宝详情页", desc: "750×自适应", w: 750, h: 0 },
-  { id: "800px", label: "800px 京东详情页", desc: "800×自适应", w: 800, h: 0 },
-  { id: "amazon-a+", label: "亚马逊 A+ 模块", desc: "970×600px", w: 970, h: 600 },
+const faqs = [
+  {
+    q: "燎原 AI 能生成哪些类型的电商图片？",
+    a: "支持生成商品主图、多角度附图、白底图、场景图、细节图、卖点图、参数图、详情页长图等全套电商视觉资产。",
+  },
+  {
+    q: "生成的图片可以直接用于电商平台吗？",
+    a: "可以。燎原 AI 内置了淘宝、京东、拼多多、抖音、亚马逊等主流平台的尺寸规范和视觉要求，生成的图片符合各平台上传标准。",
+  },
+  {
+    q: "需要专业设计能力才能使用吗？",
+    a: "不需要。只需上传产品图，选择目标平台和风格，AI 会自动完成识别、排版、生成全流程，零门槛上手。",
+  },
+  {
+    q: "生成的图片有水印吗？",
+    a: "免费版生成的图片带有水印，付费版本可生成无水印高清图片，支持 4K 分辨率输出。",
+  },
+  {
+    q: "可以指定特定的视觉风格吗？",
+    a: "可以。提供 9 种预设风格，也可以上传竞品图让 AI 学习参考风格，实现风格复刻。",
+  },
 ];
 
-const pricePositions = [
-  { id: "premium", label: "高端品质", desc: "强调品质、工艺、品牌价值", icon: Crown },
-  { id: "mid", label: "中端实用", desc: "平衡品质与价格，突出实用性", icon: Scale },
-  { id: "value", label: "性价比", desc: "突出高性价比、超值优惠", icon: TrendingUp },
-  { id: "promo", label: "促销爆款", desc: "限时优惠、热卖爆款", icon: Flame },
-  { id: "gift", label: "礼品款", desc: "精美包装、送礼首选", icon: Gift },
-];
-
-const copyIntensities = [
-  { id: "restrained", label: "克制专业", desc: "简洁专业，少营销语言", icon: FileText },
-  { id: "selling", label: "卖点清晰", desc: "核心卖点突出，信息明确", icon: ListChecks },
-  { id: "conversion", label: "强转化", desc: "引导下单，紧迫感强", icon: Target },
-  { id: "promo", label: "促销导向", desc: "价格优惠、限时抢购", icon: Megaphone },
-  { id: "spec", label: "参数说明型", desc: "详细参数，技术规格为主", icon: Ruler },
-];
-
-const qualityOptions = [
-  { id: "standard", label: "标准图", desc: "1024×1024，适合预览", cost: 0 },
-  { id: "hd", label: "高清图", desc: "2048×2048，适合展示", cost: 1 },
-  { id: "2k", label: "2K", desc: "2560×2560，适合印刷", cost: 2 },
-  { id: "4k", label: "4K", desc: "4096×4096，适合大图", cost: 3 },
-  { id: "no-watermark", label: "无水印", desc: "去除水印，可商用", cost: 1 },
-];
-
-const postProcessingOptions = [
-  { id: "cutout", label: "自动抠图", desc: "智能去除背景", icon: Scissors },
-  { id: "white-bg", label: "白底图", desc: "替换为纯白背景", icon: Square },
-  { id: "change-bg", label: "产品换背景", desc: "更换场景背景", icon: Maximize2 },
-  { id: "fix", label: "瑕疵修复", desc: "修复产品表面瑕疵", icon: Eraser },
-  { id: "upscale", label: "高清放大", desc: "无损放大图片", icon: Monitor },
-  { id: "consistent", label: "保持主体一致", desc: "多图主体风格统一", icon: Copy },
-];
-
-const mockRecognition = {
-  productType: "休闲T恤",
-  productName: "纯棉圆领短袖T恤",
-  color: "白色、黑色、灰色",
-  material: "100%纯棉",
-  packaging: "独立塑料袋包装",
-  imageQuality: "良好，光线充足，背景干净",
-  visibleText: "COTTON、100%",
-  sellingPoints: "纯棉透气、圆领百搭、多色可选、亲肤柔软",
-  uncertain: "具体克重未知、是否有尺码标未知",
-};
-
-const generationProgress = [
-  { label: "正在识别产品", duration: 3 },
-  { label: "正在生成提示词", duration: 2 },
-  { label: "正在生成主图", duration: 8 },
-  { label: "正在生成细节图", duration: 6 },
-  { label: "正在生成详情页", duration: 10 },
-  { label: "正在排版", duration: 3 },
-];
-
-export default function NewProjectPage() {
-  const router = useRouter();
-  const [step, setStep] = useState(1);
-  const [mode, setMode] = useState("");
-  const [images, setImages] = useState<{ file: File; preview: string }[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState("");
-  const [selectedContents, setSelectedContents] = useState<string[]>(["main", "scene", "detail", "selling", "long"]);
-  const [selectedStyle, setSelectedStyle] = useState("");
-  const [selectedLanguage, setSelectedLanguage] = useState("zh-CN");
-  const [quantitySettings, setQuantitySettings] = useState({
-    mainImages: 1,
-    subImages: 3,
-    detailImages: 3,
-    detailModules: 5,
-  });
-  const [selectedSize, setSelectedSize] = useState("1:1");
-  const [selectedPricePosition, setSelectedPricePosition] = useState("mid");
-  const [selectedCopyIntensity, setSelectedCopyIntensity] = useState("selling");
-  const [selectedQuality, setSelectedQuality] = useState("standard");
-  const [selectedPostProcessing, setSelectedPostProcessing] = useState<string[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [currentProgress, setCurrentProgress] = useState(0);
-  const [formData, setFormData] = useState({
-    productName: "",
-    brandName: "",
-    category: "",
-    specs: "",
-    sellingPoints: "",
-    targetAudience: "",
-    useScene: "",
-    forbiddenContent: "",
-  });
-
-  const handleFile = useCallback((file: File) => {
-    if (!file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setImages((prev) => [...prev, { file, preview: e.target?.result as string }]);
-    };
-    reader.readAsDataURL(file);
-  }, []);
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setIsDragging(false);
-      const files = Array.from(e.dataTransfer.files);
-      files.forEach(handleFile);
-    },
-    [handleFile]
-  );
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback(() => setIsDragging(false), []);
-
-  const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const toggleContent = (id: string) => {
-    setSelectedContents((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
-  };
-
-  const getModuleStep = (current: number) => {
-    const steps = [3, 5, 8, 12];
-    const idx = steps.indexOf(current);
-    if (idx >= 0 && idx < steps.length - 1) return steps[idx + 1] - steps[idx];
-    const nextStep = steps.find((s) => s > current);
-    return nextStep ? nextStep - current : 1;
-  };
-
-  const handleAnalyze = async () => {
-    setIsAnalyzing(true);
-    await new Promise((r) => setTimeout(r, 2000));
-    setFormData({
-      productName: mockRecognition.productName,
-      brandName: "",
-      category: mockRecognition.productType,
-      specs: "",
-      sellingPoints: mockRecognition.sellingPoints,
-      targetAudience: "",
-      useScene: "",
-      forbiddenContent: "",
-    });
-    setIsAnalyzing(false);
-    setStep(4);
-  };
-
-  const handleGenerate = async () => {
-    setIsGenerating(true);
-    for (let i = 0; i < generationProgress.length; i++) {
-      setCurrentProgress(i);
-      await new Promise((r) => setTimeout(r, generationProgress[i].duration * 500));
-    }
-    setIsGenerating(false);
-    router.push("/workspace/result/demo");
-  };
-
-  const canNext = () => {
-    switch (step) {
-      case 1: return !!mode;
-      case 2: return images.length > 0;
-      case 3: return true;
-      case 4: return !!formData.productName;
-      case 5: return !!selectedPlatform;
-      case 6: return selectedContents.length > 0;
-      case 7: return !!selectedStyle;
-      case 8: return !!selectedLanguage;
-      case 9: return true;
-      case 10: return !!selectedSize;
-      case 11: return !!selectedPricePosition;
-      case 12: return !!selectedCopyIntensity;
-      case 13: return !!selectedQuality;
-      case 14: return true;
-      default: return false;
-    }
-  };
-
+function FAQItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="max-w-[960px] mx-auto">
-      <div className="mb-8">
-        <h1 className="text-xl font-semibold text-gray-900">新建项目</h1>
-        <p className="text-sm text-gray-500 mt-0.5">按步骤完成配置，AI 将自动生成电商视觉素材</p>
-      </div>
-
-      <div className="mb-8">
-        <div className="flex items-center gap-0.5 overflow-x-auto pb-2">
-          {STEPS.map((s, i) => (
-            <div key={i} className="flex items-center flex-shrink-0">
-              <div className="flex items-center gap-1">
-                <div
-                  className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
-                    step > i + 1
-                      ? "bg-violet-600 text-white"
-                      : step === i + 1
-                      ? "bg-violet-600 text-white"
-                      : "bg-gray-100 text-gray-400"
-                  }`}
-                >
-                  {step > i + 1 ? <CheckCircle2 className="h-3 w-3" /> : i + 1}
-                </div>
-                <span
-                  className={`text-[10px] hidden xl:inline transition-colors whitespace-nowrap ${
-                    step === i + 1 ? "text-violet-600 font-medium" : "text-gray-400"
-                  }`}
-                >
-                  {s}
-                </span>
-              </div>
-              {i < STEPS.length - 1 && (
-                <div className={`h-px w-2 xl:w-4 mx-0.5 ${step > i + 1 ? "bg-violet-300" : "bg-gray-200"}`} />
-              )}
-            </div>
-          ))}
+    <div className="bg-white rounded-2xl border border-[#e5e5e5] overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between p-5 text-left cursor-pointer"
+      >
+        <span className="text-[14px] font-medium text-[#1d1d1f] pr-4">{q}</span>
+        <ChevronDown
+          className={`h-4 w-4 text-[#999] flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && (
+        <div className="px-5 pb-5">
+          <p className="text-[14px] text-[#86868b] leading-[1.7]">{a}</p>
         </div>
-      </div>
-
-      <div className="min-h-[480px]">
-        {step === 1 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-1">选择生成方式</h2>
-              <p className="text-sm text-gray-500">根据你的需求选择合适的生成模式</p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {generationModes.map((m) => {
-                const Icon = m.icon;
-                const active = mode === m.id;
-                return (
-                  <Card
-                    key={m.id}
-                    className={`cursor-pointer transition-all ${
-                      active
-                        ? "border-2 border-violet-500 shadow-md shadow-violet-100"
-                        : "border hover:border-violet-200 hover:shadow-sm"
-                    }`}
-                    onClick={() => setMode(m.id)}
-                  >
-                    <CardContent className="p-4">
-                      <div className={`h-10 w-10 rounded-lg ${active ? "bg-violet-100" : m.color.split(" ").slice(0, 2).join(" ")} flex items-center justify-center mb-3`}>
-                        <Icon className={`h-5 w-5 ${active ? "text-violet-600" : m.color.split(" ")[2]}`} />
-                      </div>
-                      <h3 className="text-sm font-medium text-gray-900 mb-0.5">{m.label}</h3>
-                      <p className="text-xs text-gray-400">{m.desc}</p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-1">上传图片</h2>
-              <p className="text-sm text-gray-500">上传产品图片，支持多图上传</p>
-            </div>
-            <div
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              className={`border-2 border-dashed rounded-xl p-10 text-center transition-colors ${
-                isDragging ? "border-violet-500 bg-violet-50" : "border-gray-200 bg-gray-50 hover:border-violet-300"
-              }`}
-            >
-              <div className="h-12 w-12 rounded-xl bg-violet-100 flex items-center justify-center mx-auto mb-4">
-                <Upload className="h-6 w-6 text-violet-600" />
-              </div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">拖拽图片到此处</h3>
-              <p className="text-xs text-gray-400 mb-4">支持 JPG、PNG、WEBP 格式，建议 800×800 以上</p>
-              <label>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    files.forEach(handleFile);
-                  }}
-                />
-                <Button variant="outline" size="sm" className="cursor-pointer text-sm">
-                  <ImageIcon className="h-4 w-4 mr-1.5" />
-                  选择图片
-                </Button>
-              </label>
-            </div>
-            <div className="text-xs text-gray-400 flex flex-wrap gap-x-4 gap-y-1">
-              <span>✓ 产品实拍图</span>
-              <span>✓ 白底图</span>
-              <span>✓ 包装图</span>
-              <span>✓ 场景图</span>
-              <span>✓ 竞品图</span>
-            </div>
-            {images.length > 0 && (
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
-                {images.map((img, i) => (
-                  <div key={i} className="relative group">
-                    <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 border">
-                      <img src={img.preview} alt="" className="w-full h-full object-cover" />
-                    </div>
-                    <button
-                      onClick={() => removeImage(i)}
-                      className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-                <label className="aspect-square rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-violet-300 transition-colors">
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    multiple
-                    className="hidden"
-                    onChange={(e) => {
-                      const files = Array.from(e.target.files || []);
-                      files.forEach(handleFile);
-                    }}
-                  />
-                  <Plus className="h-5 w-5 text-gray-300" />
-                </label>
-              </div>
-            )}
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-1">AI 识别结果</h2>
-              <p className="text-sm text-gray-500">系统已自动识别以下信息，请在下一步确认和补充</p>
-            </div>
-            {isAnalyzing ? (
-              <div className="flex flex-col items-center justify-center py-20">
-                <Loader2 className="h-8 w-8 text-violet-600 animate-spin mb-4" />
-                <p className="text-sm text-gray-500">AI 正在识别产品信息...</p>
-              </div>
-            ) : (
-              <Card className="border-0 shadow-sm">
-                <CardContent className="p-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {[
-                      { label: "产品类型", value: mockRecognition.productType, icon: Package },
-                      { label: "产品名称", value: mockRecognition.productName, icon: Tag },
-                      { label: "颜色", value: mockRecognition.color, icon: Palette },
-                      { label: "材质", value: mockRecognition.material, icon: Layers },
-                      { label: "包装", value: mockRecognition.packaging, icon: Square },
-                      { label: "图片质量", value: mockRecognition.imageQuality, icon: Camera },
-                      { label: "可见文字", value: mockRecognition.visibleText, icon: Type },
-                      { label: "可能卖点", value: mockRecognition.sellingPoints, icon: Star },
-                    ].map((item, i) => {
-                      const Icon = item.icon;
-                      return (
-                        <div key={i} className="flex items-start gap-3 py-2">
-                          <div className="h-7 w-7 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <Icon className="h-3.5 w-3.5 text-gray-500" />
-                          </div>
-                          <div>
-                            <div className="text-xs text-gray-400 mb-0.5">{item.label}</div>
-                            <div className="text-sm text-gray-900">{item.value}</div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div className="flex items-start gap-3 py-2 md:col-span-2">
-                      <div className="h-7 w-7 rounded-md bg-amber-50 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Ban className="h-3.5 w-3.5 text-amber-500" />
-                      </div>
-                      <div>
-                        <div className="text-xs text-amber-500 mb-0.5">不确定信息</div>
-                        <div className="text-sm text-amber-700">{mockRecognition.uncertain}</div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
-
-        {step === 4 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-1">确认商品资料</h2>
-              <p className="text-sm text-gray-500">补充和修正商品信息，生成结果将更准确</p>
-            </div>
-            <Card className="border-0 shadow-sm">
-              <CardContent className="p-5 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-medium text-gray-700 mb-1.5 block">产品名称 *</label>
-                    <Input
-                      value={formData.productName}
-                      onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
-                      placeholder="输入产品名称"
-                      className="h-9 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-700 mb-1.5 block">品牌名称</label>
-                    <Input
-                      value={formData.brandName}
-                      onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
-                      placeholder="输入品牌名称"
-                      className="h-9 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-700 mb-1.5 block">产品类目</label>
-                    <Input
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      placeholder="如：服装 > T恤"
-                      className="h-9 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-700 mb-1.5 block">规格参数</label>
-                    <Input
-                      value={formData.specs}
-                      onChange={(e) => setFormData({ ...formData, specs: e.target.value })}
-                      placeholder="如：S/M/L/XL，180g"
-                      className="h-9 text-sm"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-700 mb-1.5 block">核心卖点</label>
-                  <Textarea
-                    value={formData.sellingPoints}
-                    onChange={(e) => setFormData({ ...formData, sellingPoints: e.target.value })}
-                    placeholder="每行一个卖点，如：纯棉透气 / 圆领百搭 / 亲肤柔软"
-                    className="text-sm min-h-[80px]"
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-medium text-gray-700 mb-1.5 block">目标人群</label>
-                    <Input
-                      value={formData.targetAudience}
-                      onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value })}
-                      placeholder="如：18-35岁年轻男女"
-                      className="h-9 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-700 mb-1.5 block">使用场景</label>
-                    <Input
-                      value={formData.useScene}
-                      onChange={(e) => setFormData({ ...formData, useScene: e.target.value })}
-                      placeholder="如：日常休闲、运动健身"
-                      className="h-9 text-sm"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-700 mb-1.5 block">禁止生成内容</label>
-                  <Input
-                    value={formData.forbiddenContent}
-                    onChange={(e) => setFormData({ ...formData, forbiddenContent: e.target.value })}
-                    placeholder="如：不要出现竞品品牌、不要医疗暗示"
-                    className="h-9 text-sm"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {step === 5 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-1">选择电商平台</h2>
-              <p className="text-sm text-gray-500">不同平台有不同的图片尺寸和风格规范</p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {platforms.map((p) => {
-                const Icon = p.icon;
-                const active = selectedPlatform === p.id;
-                return (
-                  <Card
-                    key={p.id}
-                    className={`cursor-pointer transition-all ${
-                      active
-                        ? "border-2 border-violet-500 shadow-md shadow-violet-100"
-                        : "border hover:border-violet-200 hover:shadow-sm"
-                    }`}
-                    onClick={() => {
-                      setSelectedPlatform(p.id);
-                      setSelectedContents(p.defaultTypes);
-                      setSelectedStyle(p.recommendedStyle);
-                    }}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div
-                          className="h-9 w-9 rounded-lg flex items-center justify-center text-white"
-                          style={{ backgroundColor: p.color }}
-                        >
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-900">{p.name}</h3>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{p.visualStyle}</span>
-                        </div>
-                      </div>
-                      <p className="text-xs text-gray-400 mb-2">{p.desc}</p>
-                      <div className="flex flex-wrap gap-1">
-                        {p.emphasis.map((e) => (
-                          <span key={e} className="text-[10px] px-1.5 py-0.5 rounded bg-violet-50 text-violet-600">{e}</span>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {step === 6 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-1">选择生成内容</h2>
-              <p className="text-sm text-gray-500">可多选，选择需要生成的图片类型</p>
-            </div>
-            {selectedPlatform && (() => {
-              const pf = platforms.find((p) => p.id === selectedPlatform);
-              if (!pf) return null;
-              const pfContentLabels = pf.defaultTypes.map((t) => contentTypes.find((c) => c.id === t)?.label).filter(Boolean);
-              return (
-                <div className="bg-violet-50 border border-violet-100 rounded-lg px-4 py-3 flex items-start gap-2">
-                  <div className="h-5 w-5 rounded flex items-center justify-center bg-violet-100 flex-shrink-0 mt-0.5">
-                    <Sparkles className="h-3 w-3 text-violet-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-violet-700 font-medium">
-                      {pf.name}推荐生成：{pfContentLabels.join("、")}
-                    </p>
-                    <p className="text-[11px] text-violet-500 mt-0.5">
-                      视觉风格：{pf.visualStyle} · 强调：{pf.emphasis.join("、")}
-                    </p>
-                  </div>
-                </div>
-              );
-            })()}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {contentTypes.map((ct) => {
-                const active = selectedContents.includes(ct.id);
-                const pf = platforms.find((p) => p.id === selectedPlatform);
-                const isDefault = pf?.defaultTypes.includes(ct.id);
-                return (
-                  <Card
-                    key={ct.id}
-                    className={`cursor-pointer transition-all ${
-                      active
-                        ? "border-2 border-violet-500 shadow-md shadow-violet-100"
-                        : "border hover:border-violet-200 hover:shadow-sm"
-                    }`}
-                    onClick={() => toggleContent(ct.id)}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <div className={`h-10 w-10 rounded-lg mx-auto mb-2 flex items-center justify-center ${
-                        active ? "bg-violet-100" : "bg-gray-100"
-                      }`}>
-                        {active ? (
-                          <CheckCircle2 className="h-5 w-5 text-violet-600" />
-                        ) : (
-                          <Minus className="h-5 w-5 text-gray-300" />
-                        )}
-                      </div>
-                      <h3 className="text-sm font-medium text-gray-900">
-                        {ct.label}
-                        {isDefault && <span className="text-[10px] ml-1 text-violet-500">推荐</span>}
-                      </h3>
-                      <p className="text-xs text-gray-400 mt-0.5">{ct.desc}</p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {step === 7 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-1">选择视觉风格</h2>
-              <p className="text-sm text-gray-500">不同风格适用于不同品类和平台</p>
-            </div>
-            {selectedPlatform && (() => {
-              const pf = platforms.find((p) => p.id === selectedPlatform);
-              const recStyle = styles.find((s) => s.id === pf?.recommendedStyle);
-              if (!pf || !recStyle) return null;
-              return (
-                <div className="bg-violet-50 border border-violet-100 rounded-lg px-4 py-3 flex items-start gap-2">
-                  <div className="h-5 w-5 rounded flex items-center justify-center bg-violet-100 flex-shrink-0 mt-0.5">
-                    <Sparkles className="h-3 w-3 text-violet-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-violet-700 font-medium">
-                      {pf.name}推荐风格：<span className="font-semibold">{recStyle.label}</span> — {recStyle.desc}
-                    </p>
-                  </div>
-                </div>
-              );
-            })()}
-            <div className="grid grid-cols-3 md:grid-cols-3 gap-3">
-              {styles.map((s) => {
-                const active = selectedStyle === s.id;
-                const pf = platforms.find((p) => p.id === selectedPlatform);
-                const isRecommended = pf?.recommendedStyle === s.id;
-                return (
-                  <Card
-                    key={s.id}
-                    className={`cursor-pointer transition-all overflow-hidden ${
-                      active
-                        ? "border-2 border-violet-500 shadow-md shadow-violet-100"
-                        : "border hover:border-violet-200 hover:shadow-sm"
-                    }`}
-                    onClick={() => setSelectedStyle(s.id)}
-                  >
-                    <div className={`h-16 bg-gradient-to-br ${s.color} relative`}>
-                      {active && (
-                        <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-violet-600 flex items-center justify-center">
-                          <CheckCircle2 className="h-3 w-3 text-white" />
-                        </div>
-                      )}
-                      {isRecommended && !active && (
-                        <div className="absolute top-2 right-2 h-5 px-1.5 rounded-full bg-white/80 flex items-center justify-center">
-                          <span className="text-[9px] font-medium text-violet-600">推荐</span>
-                        </div>
-                      )}
-                    </div>
-                    <CardContent className="p-3">
-                      <h3 className="text-sm font-medium text-gray-900">
-                        {s.label}
-                        {isRecommended && <span className="text-[10px] ml-1 text-violet-500">平台推荐</span>}
-                      </h3>
-                      <p className="text-xs text-gray-400 mt-0.5">{s.desc}</p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {step === 8 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-1">语言选择</h2>
-              <p className="text-sm text-gray-500">选择生成内容的语言</p>
-            </div>
-            <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-              {languages.map((lang) => {
-                const active = selectedLanguage === lang.id;
-                return (
-                  <Card
-                    key={lang.id}
-                    className={`cursor-pointer transition-all ${
-                      active
-                        ? "border-2 border-violet-500 shadow-md shadow-violet-100"
-                        : "border hover:border-violet-200 hover:shadow-sm"
-                    }`}
-                    onClick={() => setSelectedLanguage(lang.id)}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <div className="text-2xl mb-2">{lang.flag}</div>
-                      <h3 className="text-sm font-medium text-gray-900">{lang.label}</h3>
-                      {active && (
-                        <div className="mt-2">
-                          <CheckCircle2 className="h-4 w-4 text-violet-600 mx-auto" />
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {step === 9 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-1">张数选择</h2>
-              <p className="text-sm text-gray-500">设置各类图片的生成数量</p>
-            </div>
-            <Card className="border-0 shadow-sm">
-              <CardContent className="p-5 space-y-6">
-                {[
-                  { key: "mainImages" as const, label: "主图张数", min: 1, max: 4, desc: "商品展示主图" },
-                  { key: "subImages" as const, label: "附图张数", min: 1, max: 6, desc: "多角度展示图" },
-                  { key: "detailImages" as const, label: "细节图张数", min: 1, max: 6, desc: "局部细节放大" },
-                  { key: "detailModules" as const, label: "详情页模块数", min: 3, max: 12, desc: "详情页内容模块", isModule: true },
-                ].map((item) => (
-                  <div key={item.key} className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">{item.label}</h3>
-                      <p className="text-xs text-gray-400">{item.desc}</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() =>
-                          setQuantitySettings((prev) => ({
-                            ...prev,
-                            [item.key]: Math.max(item.min, prev[item.key] - (item.isModule ? getModuleStep(prev[item.key]) : 1)),
-                          }))
-                        }
-                        disabled={quantitySettings[item.key] <= item.min}
-                        className="h-8 w-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                      >
-                        <Minus className="h-3.5 w-3.5" />
-                      </button>
-                      <span className="text-lg font-semibold text-gray-900 w-8 text-center">
-                        {quantitySettings[item.key]}
-                      </span>
-                      <button
-                        onClick={() =>
-                          setQuantitySettings((prev) => ({
-                            ...prev,
-                            [item.key]: Math.min(item.max, prev[item.key] + (item.isModule ? getModuleStep(prev[item.key]) : 1)),
-                          }))
-                        }
-                        disabled={quantitySettings[item.key] >= item.max}
-                        className="h-8 w-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {step === 10 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-1">尺寸/比例选择</h2>
-              <p className="text-sm text-gray-500">选择输出图片的尺寸和比例</p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {sizeOptions.map((size) => {
-                const active = selectedSize === size.id;
-                return (
-                  <Card
-                    key={size.id}
-                    className={`cursor-pointer transition-all ${
-                      active
-                        ? "border-2 border-violet-500 shadow-md shadow-violet-100"
-                        : "border hover:border-violet-200 hover:shadow-sm"
-                    }`}
-                    onClick={() => setSelectedSize(size.id)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-center mb-3">
-                        <div
-                          className={`border-2 rounded ${active ? "border-violet-400 bg-violet-50" : "border-gray-300 bg-gray-50"}`}
-                          style={{
-                            width: `${Math.min(48, (size.w / Math.max(size.w, size.h || size.w)) * 48)}px`,
-                            height: `${Math.min(48, (size.h || size.w) / Math.max(size.w, size.h || size.w) * 48)}px`,
-                          }}
-                        />
-                      </div>
-                      <h3 className="text-sm font-medium text-gray-900 text-center">
-                        {size.label}
-                        {active && <CheckCircle2 className="h-3.5 w-3.5 text-violet-600 inline ml-1" />}
-                      </h3>
-                      <p className="text-xs text-gray-400 text-center mt-0.5">{size.desc}</p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {step === 11 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-1">价格定位选择</h2>
-              <p className="text-sm text-gray-500">选择产品的价格定位，影响文案和视觉风格</p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-              {pricePositions.map((pos) => {
-                const Icon = pos.icon;
-                const active = selectedPricePosition === pos.id;
-                return (
-                  <Card
-                    key={pos.id}
-                    className={`cursor-pointer transition-all ${
-                      active
-                        ? "border-2 border-violet-500 shadow-md shadow-violet-100"
-                        : "border hover:border-violet-200 hover:shadow-sm"
-                    }`}
-                    onClick={() => setSelectedPricePosition(pos.id)}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <div className={`h-10 w-10 rounded-lg mx-auto mb-2 flex items-center justify-center ${
-                        active ? "bg-violet-100" : "bg-gray-100"
-                      }`}>
-                        <Icon className={`h-5 w-5 ${active ? "text-violet-600" : "text-gray-500"}`} />
-                      </div>
-                      <h3 className="text-sm font-medium text-gray-900">{pos.label}</h3>
-                      <p className="text-xs text-gray-400 mt-0.5">{pos.desc}</p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {step === 12 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-1">文案强度选择</h2>
-              <p className="text-sm text-gray-500">选择文案的营销力度和风格</p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-              {copyIntensities.map((ci) => {
-                const Icon = ci.icon;
-                const active = selectedCopyIntensity === ci.id;
-                return (
-                  <Card
-                    key={ci.id}
-                    className={`cursor-pointer transition-all ${
-                      active
-                        ? "border-2 border-violet-500 shadow-md shadow-violet-100"
-                        : "border hover:border-violet-200 hover:shadow-sm"
-                    }`}
-                    onClick={() => setSelectedCopyIntensity(ci.id)}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <div className={`h-10 w-10 rounded-lg mx-auto mb-2 flex items-center justify-center ${
-                        active ? "bg-violet-100" : "bg-gray-100"
-                      }`}>
-                        <Icon className={`h-5 w-5 ${active ? "text-violet-600" : "text-gray-500"}`} />
-                      </div>
-                      <h3 className="text-sm font-medium text-gray-900">{ci.label}</h3>
-                      <p className="text-xs text-gray-400 mt-0.5">{ci.desc}</p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {step === 13 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-1">输出质量选择</h2>
-              <p className="text-sm text-gray-500">更高质量需要更多积分</p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-              {qualityOptions.map((q) => {
-                const active = selectedQuality === q.id;
-                return (
-                  <Card
-                    key={q.id}
-                    className={`cursor-pointer transition-all ${
-                      active
-                        ? "border-2 border-violet-500 shadow-md shadow-violet-100"
-                        : "border hover:border-violet-200 hover:shadow-sm"
-                    }`}
-                    onClick={() => setSelectedQuality(q.id)}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <div className={`h-10 w-10 rounded-lg mx-auto mb-2 flex items-center justify-center ${
-                        active ? "bg-violet-100" : "bg-gray-100"
-                      }`}>
-                        <Monitor className={`h-5 w-5 ${active ? "text-violet-600" : "text-gray-500"}`} />
-                      </div>
-                      <h3 className="text-sm font-medium text-gray-900">{q.label}</h3>
-                      <p className="text-xs text-gray-400 mt-0.5">{q.desc}</p>
-                      <span className={`inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full ${
-                        q.cost === 0 ? "bg-green-50 text-green-600" : "bg-amber-50 text-amber-600"
-                      }`}>
-                        {q.cost === 0 ? "免费" : `+${q.cost} 积分`}
-                      </span>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {step === 14 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-1">后期处理选项</h2>
-              <p className="text-sm text-gray-500">可多选，选择需要的后期处理效果</p>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {postProcessingOptions.map((pp) => {
-                const Icon = pp.icon;
-                const active = selectedPostProcessing.includes(pp.id);
-                return (
-                  <Card
-                    key={pp.id}
-                    className={`cursor-pointer transition-all ${
-                      active
-                        ? "border-2 border-violet-500 shadow-md shadow-violet-100"
-                        : "border hover:border-violet-200 hover:shadow-sm"
-                    }`}
-                    onClick={() =>
-                      setSelectedPostProcessing((prev) =>
-                        prev.includes(pp.id) ? prev.filter((p) => p !== pp.id) : [...prev, pp.id]
-                      )
-                    }
-                  >
-                    <CardContent className="p-4 text-center">
-                      <div className={`h-10 w-10 rounded-lg mx-auto mb-2 flex items-center justify-center ${
-                        active ? "bg-violet-100" : "bg-gray-100"
-                      }`}>
-                        {active ? (
-                          <CheckCircle2 className="h-5 w-5 text-violet-600" />
-                        ) : (
-                          <Icon className="h-5 w-5 text-gray-500" />
-                        )}
-                      </div>
-                      <h3 className="text-sm font-medium text-gray-900">{pp.label}</h3>
-                      <p className="text-xs text-gray-400 mt-0.5">{pp.desc}</p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {step === 15 && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-1">生成中</h2>
-              <p className="text-sm text-gray-500">AI 正在为你生成电商视觉素材</p>
-            </div>
-            <Card className="border-0 shadow-sm">
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  {generationProgress.map((p, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      {i < currentProgress ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
-                      ) : i === currentProgress && isGenerating ? (
-                        <Loader2 className="h-5 w-5 text-violet-600 animate-spin flex-shrink-0" />
-                      ) : (
-                        <div className="h-5 w-5 rounded-full border-2 border-gray-200 flex-shrink-0" />
-                      )}
-                      <span className={`text-sm ${
-                        i < currentProgress ? "text-green-600" : i === currentProgress && isGenerating ? "text-violet-600 font-medium" : "text-gray-400"
-                      }`}>
-                        {p.label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-6">
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-violet-600 rounded-full transition-all duration-500"
-                      style={{ width: `${((currentProgress + 1) / generationProgress.length) * 100}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-400 mt-2 text-center">
-                    {isGenerating ? generationProgress[currentProgress]?.label : "生成完成！"}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </div>
-
-      <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
-        <Button
-          variant="outline"
-          onClick={() => setStep((s) => Math.max(1, s - 1))}
-          disabled={step === 1 || isGenerating}
-          className="text-sm"
-        >
-          <ArrowLeft className="h-4 w-4 mr-1.5" />
-          上一步
-        </Button>
-
-        {step < 15 ? (
-          <Button
-            onClick={() => {
-              if (step === 2 && images.length > 0) {
-                setIsAnalyzing(true);
-                setStep(3);
-                setTimeout(() => {
-                  setFormData({
-                    productName: mockRecognition.productName,
-                    brandName: "",
-                    category: mockRecognition.productType,
-                    specs: "",
-                    sellingPoints: mockRecognition.sellingPoints,
-                    targetAudience: "",
-                    useScene: "",
-                    forbiddenContent: "",
-                  });
-                  setIsAnalyzing(false);
-                  setStep(4);
-                }, 2000);
-              } else {
-                setStep((s) => s + 1);
-              }
-            }}
-            disabled={!canNext()}
-            className="bg-gray-900 hover:bg-gray-800 text-white text-sm"
-          >
-            下一步
-            <ArrowRight className="h-4 w-4 ml-1.5" />
-          </Button>
-        ) : (
-          <Button
-            onClick={handleGenerate}
-            disabled={isGenerating}
-            className="bg-violet-600 hover:bg-violet-700 text-white text-sm"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-                生成中...
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4 mr-1.5" />
-                开始生成
-              </>
-            )}
-          </Button>
-        )}
-      </div>
+      )}
     </div>
   );
 }
 
-function Plus({ className }: { className?: string }) {
+export default function NewProjectPage() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M5 12h14" />
-      <path d="M12 5v14" />
-    </svg>
+    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f]">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[#e5e5e5]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-14">
+            <Link href="/" className="flex items-center space-x-2 cursor-pointer">
+              <div className="h-7 w-7 rounded-lg bg-[#1d1d1f] flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-white" />
+              </div>
+              <span className="text-[16px] font-semibold tracking-tight">燎原 AI</span>
+            </Link>
+            <div className="hidden md:flex items-center space-x-8 text-[14px]">
+              <Link href="/features" className="text-[#86868b] hover:text-[#1d1d1f] transition cursor-pointer">功能</Link>
+              <Link href="/cases" className="text-[#86868b] hover:text-[#1d1d1f] transition cursor-pointer">案例</Link>
+              <Link href="/pricing" className="text-[#86868b] hover:text-[#1d1d1f] transition cursor-pointer">价格</Link>
+              <Link href="/login" className="text-[#86868b] hover:text-[#1d1d1f] transition cursor-pointer">登录</Link>
+            </div>
+            <Link href="/workspace/create">
+              <Button className="bg-[#1d1d1f] text-white hover:bg-[#333] rounded-full text-[14px] font-medium cursor-pointer transition-all hover:shadow-lg hover:shadow-black/10">
+                免费开始
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      <section className="relative pt-20 pb-14 px-4 sm:px-6 lg:px-10">
+        <div className="max-w-[1600px] mx-auto relative z-10">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 bg-white rounded-full px-4 py-1.5 mb-4 border border-[#e5e5e5]">
+              <Sparkles className="h-3.5 w-3.5 text-[#999]" />
+              <span className="text-[12px] text-[#86868b]">AI 驱动 · 一键生成</span>
+            </div>
+
+            <h1 className="text-[28px] sm:text-[36px] md:text-[44px] font-bold mb-4 leading-[1.1] tracking-[-0.02em] text-[#1d1d1f]">
+              一键生成主图 & 详情页图
+            </h1>
+            <p className="text-[14px] md:text-[16px] text-[#86868b] mb-6 max-w-2xl mx-auto leading-[1.7]">
+              上传产品图，AI 自动识别商品信息，匹配平台规则，一键生成全套电商视觉资产。
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
+              <Link href="/workspace/create">
+                <Button size="lg" className="bg-[#1d1d1f] text-white hover:bg-[#333] text-[14px] px-8 h-12 rounded-full font-semibold cursor-pointer transition-all hover:shadow-lg hover:shadow-black/10">
+                  免费试用
+                  <ArrowRight className="ml-1.5 h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href="/cases">
+                <Button size="lg" variant="outline" className="text-[14px] px-8 h-12 rounded-full border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] hover:border-[#ccc] cursor-pointer">
+                  查看案例
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-[#e5e5e5] p-1 shadow-sm">
+            <div className="bg-[#f5f5f7] rounded-xl p-4 lg:p-6">
+              <div className="grid grid-cols-1 xl:grid-cols-[minmax(520px,0.9fr)_minmax(680px,1.1fr)] gap-5 lg:gap-6">
+                <div className="space-y-4">
+                  <div className="bg-white rounded-xl p-5 border border-[#e5e5e5]">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="h-7 w-7 rounded-md bg-[#f5f5f7] border border-[#e5e5e5] flex items-center justify-center">
+                        <Upload className="h-4 w-4 text-[#1d1d1f]" />
+                      </div>
+                      <span className="text-[13px] font-medium text-[#1d1d1f]">上传产品图</span>
+                    </div>
+                    <div className="aspect-[4/3] rounded-xl bg-[#fafafa] border-2 border-dashed border-[#e5e5e5] flex flex-col items-center justify-center cursor-pointer hover:border-[#ccc] hover:bg-[#f5f5f7] transition-colors">
+                      <ImageIcon className="h-10 w-10 text-[#ccc] mb-2" />
+                      <span className="text-[12px] text-[#999]">点击或拖拽上传产品图片</span>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-xl p-5 border border-[#e5e5e5]">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="h-7 w-7 rounded-md bg-cyan-50 border border-cyan-200 flex items-center justify-center">
+                        <Wand2 className="h-4 w-4 text-cyan-600" />
+                      </div>
+                      <span className="text-[13px] font-medium text-[#1d1d1f]">AI 智能识别</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {["品类：休闲T恤", "材质：100%纯棉", "颜色：白/黑/灰", "卖点：透气舒适"].map((item, i) => (
+                        <div key={i} className="flex items-center gap-2 text-[12px]">
+                          <Check className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                          <span className="text-[#666]">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-xl p-5 border border-[#e5e5e5]">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="h-7 w-7 rounded-md bg-amber-50 border border-amber-200 flex items-center justify-center">
+                        <Store className="h-4 w-4 text-amber-600" />
+                      </div>
+                      <span className="text-[13px] font-medium text-[#1d1d1f]">平台配置</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {platforms.map((p) => (
+                        <span key={p.id} className="text-[11px] px-3 py-1.5 rounded-md bg-[#f5f5f7] border border-[#e5e5e5] text-[#666] hover:border-[#ccc] hover:bg-white cursor-pointer transition-colors">
+                          {p.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="bg-white rounded-xl p-5 border border-[#e5e5e5] h-full">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="h-7 w-7 rounded-md bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+                          <Layers className="h-4 w-4 text-emerald-600" />
+                        </div>
+                        <span className="text-[13px] font-medium text-[#1d1d1f]">生成预览</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button className="h-7 w-7 rounded-md bg-[#f5f5f7] flex items-center justify-center text-[#999] hover:bg-white hover:text-[#1d1d1f] transition-colors cursor-pointer">
+                          <ZoomIn className="h-3.5 w-3.5" />
+                        </button>
+                        <button className="h-7 w-7 rounded-md bg-[#f5f5f7] flex items-center justify-center text-[#999] hover:bg-white hover:text-[#1d1d1f] transition-colors cursor-pointer">
+                          <Square className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { title: "主图", subtitle: "白底图" },
+                        { title: "场景图", subtitle: "使用场景" },
+                        { title: "细节图", subtitle: "材质特写" },
+                        { title: "卖点图", subtitle: "核心卖点" },
+                      ].map((item, i) => (
+                        <div key={i} className="group">
+                          <div className="aspect-[4/3] rounded-lg bg-gradient-to-br from-[#f5f5f7] to-[#e5e5e5] flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition-shadow">
+                            <Camera className="h-8 w-8 text-[#ccc] mb-1 group-hover:text-[#999] transition-colors" />
+                            <span className="text-[10px] text-[#999]">{item.title}</span>
+                          </div>
+                          <div className="mt-2 text-[11px] text-[#666]">{item.subtitle}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-xl p-4 border border-[#e5e5e5]">
+                    <div className="flex items-center gap-3">
+                      <div className="h-2 flex-1 rounded-full bg-[#f5f5f7] overflow-hidden">
+                        <div className="h-full w-1/2 rounded-full bg-[#1d1d1f] animate-pulse" />
+                      </div>
+                      <span className="text-[12px] text-[#86868b] whitespace-nowrap">AI 正在生成中...</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 sm:px-6 lg:px-10 py-14">
+        <div className="max-w-[1600px] mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-[24px] md:text-[28px] font-bold mb-3 text-[#1d1d1f]">全品类商品图：从一张原图到全套详情页</h2>
+            <p className="text-[14px] text-[#86868b] max-w-xl mx-auto">
+              无论食品、美妆、数码、服装还是家居，AI 都能理解产品特性，生成符合品类调性的专业视觉。
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {showcaseItems.map((item, i) => (
+              <div key={i} className="group bg-white rounded-2xl overflow-hidden cursor-pointer border border-[#e5e5e5] hover:shadow-lg hover:-translate-y-0.5 transition-all">
+                <div className={`aspect-[3/4] bg-gradient-to-br ${item.gradient} flex items-center justify-center relative`}>
+                  <ImageIcon className="h-10 w-10 text-[#ccc] group-hover:text-[#999] transition-colors" />
+                </div>
+                <div className="p-3">
+                  <div className="text-[14px] font-semibold text-[#1d1d1f]">{item.subtitle}</div>
+                  <div className="text-[12px] text-[#86868b]">{item.title}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 sm:px-6 lg:px-10 py-14">
+        <div className="max-w-[1200px] mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-[24px] md:text-[28px] font-bold mb-3 text-[#1d1d1f]">燎原 AI vs 传统设计模式</h2>
+            <p className="text-[14px] text-[#86868b]">对比传统设计流程，看看 AI 能为你节省多少时间和成本</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-[#e5e5e5] overflow-hidden">
+            <div className="grid grid-cols-3 border-b border-[#e5e5e5]">
+              <div className="p-4 text-[12px] font-medium text-[#86868b]">对比项</div>
+              <div className="p-4 text-[12px] font-medium text-[#86868b] text-center">传统设计</div>
+              <div className="p-4 text-[12px] font-medium text-[#1d1d1f] text-center">燎原 AI</div>
+            </div>
+            {comparisonData.map((row, i) => (
+              <div key={i} className={`grid grid-cols-3 ${i < comparisonData.length - 1 ? "border-b border-[#f5f5f7]" : ""}`}>
+                <div className="p-4 text-[12px] text-[#1d1d1f]">{row.feature}</div>
+                <div className="p-4 text-[12px] text-[#86868b] text-center flex items-center justify-center">
+                  <X className="h-3.5 w-3.5 text-red-400 mr-1.5" />
+                  {row.traditional}
+                </div>
+                <div className="p-4 text-[12px] text-[#1d1d1f] text-center flex items-center justify-center">
+                  <Check className="h-3.5 w-3.5 text-emerald-500 mr-1.5" />
+                  {row.picset}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 sm:px-6 lg:px-10 py-14">
+        <div className="max-w-[1600px] mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-[24px] md:text-[28px] font-bold mb-3 text-[#1d1d1f]">核心竞争优势</h2>
+            <p className="text-[14px] text-[#86868b]">为什么越来越多的电商团队选择燎原 AI</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {advantages.map((adv, i) => {
+              const Icon = adv.icon;
+              return (
+                <div key={i} className={`bg-white rounded-2xl p-6 border ${adv.border} hover:shadow-md transition-shadow`}>
+                  <div className={`h-12 w-12 rounded-xl ${adv.bg} flex items-center justify-center mb-4`}>
+                    <Icon className={`h-6 w-6 ${adv.iconColor}`} />
+                  </div>
+                  <h3 className="text-[14px] font-semibold text-[#1d1d1f] mb-2">{adv.title}</h3>
+                  <p className="text-[12px] text-[#86868b] leading-[1.7]">{adv.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 sm:px-6 lg:px-10 py-14">
+        <div className="max-w-[1200px] mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-[24px] md:text-[28px] font-bold mb-3 text-[#1d1d1f]">常见问题</h2>
+            <p className="text-[14px] text-[#86868b]">关于燎原 AI 的常见疑问解答</p>
+          </div>
+          <div className="space-y-3">
+            {faqs.map((faq, i) => (
+              <FAQItem key={i} q={faq.q} a={faq.a} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 sm:px-6 lg:px-10 py-14">
+        <div className="max-w-[1200px] mx-auto">
+          <div className="bg-white rounded-2xl p-8 md:p-12 border border-[#e5e5e5] text-center">
+            <h2 className="text-[24px] md:text-[28px] font-bold mb-4 text-[#1d1d1f]">准备好开始了吗？</h2>
+            <p className="text-[14px] text-[#86868b] mb-6 max-w-md mx-auto">
+              上传你的产品图，让 AI 为你生成专业级电商视觉资产。
+            </p>
+            <Link href="/workspace/create">
+              <Button size="lg" className="bg-[#1d1d1f] text-white hover:bg-[#333] text-[14px] px-10 h-12 rounded-full font-semibold cursor-pointer transition-all hover:shadow-lg hover:shadow-black/10">
+                免费试用
+                <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-[#e5e5e5] py-6 px-4 sm:px-6 lg:px-10">
+        <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center space-x-2">
+            <div className="h-6 w-6 rounded-md bg-[#1d1d1f] flex items-center justify-center">
+              <Sparkles className="h-3.5 w-3.5 text-white" />
+            </div>
+            <span className="text-[14px] font-semibold text-[#1d1d1f]">燎原 AI</span>
+          </div>
+          <p className="text-[12px] text-[#86868b]">© 2026 燎原 AI. All rights reserved.</p>
+        </div>
+      </footer>
+    </div>
   );
 }

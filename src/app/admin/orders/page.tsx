@@ -68,7 +68,7 @@ export default function AdminOrdersPage() {
           <CardContent className="pt-5">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-500">发放额度</span>
-              <Zap className="h-4 w-4 text-violet-500" />
+              <Zap className="h-4 w-4 text-[#1d1d1f]" />
             </div>
             <div className="text-2xl font-bold text-gray-900">{totalCredits.toLocaleString()}</div>
             <div className="text-xs text-gray-400 mt-1">次</div>
@@ -94,7 +94,7 @@ export default function AdminOrdersPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="搜索订单号、用户或描述..."
-            className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+            className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>

@@ -35,7 +35,7 @@ export default function AdminPromptsPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">提示词模板管理</h1>
-        <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white">
+        <Button className="bg-[#1d1d1f] hover:bg-[#333] text-white">
           <Plus className="h-4 w-4 mr-2" />
           新建提示词
         </Button>
@@ -49,7 +49,7 @@ export default function AdminPromptsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="搜索提示词模板..."
-            className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+            className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -60,8 +60,8 @@ export default function AdminPromptsPage() {
             <CardContent className="py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-lg bg-violet-50 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-violet-600" />
+                  <div className="h-10 w-10 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-[#1d1d1f]" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
@@ -93,12 +93,12 @@ export default function AdminPromptsPage() {
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                   <label className="text-xs text-gray-400 mb-2 block">提示词内容</label>
                   <textarea
-                    className="w-full h-32 px-3 py-2 border rounded-lg text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-violet-500"
+                    className="w-full h-32 px-3 py-2 border rounded-lg text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                     defaultValue={`电商商品摄影，${p.category}类目，${p.style}风格，${p.imageType}，高质量，专业摄影，8K分辨率，柔和自然光，浅景深...`}
                   />
                   <div className="flex justify-end gap-2 mt-2">
                     <Button variant="outline" size="sm">取消</Button>
-                    <Button size="sm" className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white">保存</Button>
+                    <Button size="sm" className="bg-[#1d1d1f] hover:bg-[#333] text-white">保存</Button>
                   </div>
                 </div>
               )}

@@ -112,24 +112,26 @@ const faqs = [
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-white">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f]">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[#e5e5e5]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-14">
             <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
-                <Sparkles className="h-5 w-5 text-white" />
+              <div className="h-7 w-7 rounded-lg bg-[#1d1d1f] flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">图流 AI</span>
+              <span className="text-[16px] font-semibold tracking-tight">燎原 AI</span>
             </div>
-            <div className="hidden md:flex items-center space-x-8 text-sm">
-              <Link href="/" className="text-gray-600 hover:text-gray-900">首页</Link>
-              <Link href="/features" className="text-gray-600 hover:text-gray-900">功能介绍</Link>
-              <Link href="/cases" className="text-gray-600 hover:text-gray-900">案例展示</Link>
-              <span className="text-violet-600 font-medium">价格套餐</span>
+            <div className="hidden md:flex items-center space-x-8 text-[14px]">
+              <Link href="/" className="text-[#86868b] hover:text-[#1d1d1f] transition-colors">首页</Link>
+              <Link href="/features" className="text-[#86868b] hover:text-[#1d1d1f] transition-colors">功能介绍</Link>
+              <Link href="/cases" className="text-[#86868b] hover:text-[#1d1d1f] transition-colors">案例展示</Link>
+              <span className="text-[#1d1d1f] font-medium">价格套餐</span>
             </div>
-            <Link href="/create">
-              <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white">免费开始</Button>
+            <Link href="/workspace/create">
+              <Button className="bg-[#1d1d1f] text-white hover:bg-[#333] rounded-full text-[14px] font-medium cursor-pointer transition-all hover:shadow-lg hover:shadow-black/10">
+                免费开始
+              </Button>
             </Link>
           </div>
         </div>
@@ -137,55 +139,54 @@ export default function PricingPage() {
 
       <section className="pt-28 pb-12 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            简单透明的
-            <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">价格方案</span>
+          <h1 className="text-[40px] md:text-[48px] font-bold text-[#1d1d1f] mb-4 tracking-[-0.02em]">
+            简单透明的价格方案
           </h1>
-          <p className="text-lg text-gray-500">按需选择，随时升级或降级</p>
+          <p className="text-[18px] text-[#86868b]">按需选择，随时升级或降级</p>
         </div>
       </section>
 
       <section className="py-8 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
             {plans.map((plan, i) => (
-              <Card key={i} className={`relative ${plan.highlight ? "border-2 border-violet-500 shadow-lg shadow-violet-100" : "border shadow-sm"}`}>
+              <Card key={i} className={`relative border rounded-2xl ${plan.highlight ? "border-[#1d1d1f] shadow-lg shadow-black/5" : "border-[#e5e5e5] shadow-sm"}`}>
                 {plan.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-medium rounded-full">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#1d1d1f] text-white text-[12px] font-medium rounded-full">
                     最受欢迎
                   </div>
                 )}
                 <CardHeader className="text-center pb-2">
-                  <CardTitle className="text-lg">{plan.name}</CardTitle>
-                  <p className="text-sm text-gray-500">{plan.desc}</p>
+                  <CardTitle className="text-[18px]">{plan.name}</CardTitle>
+                  <p className="text-[14px] text-[#86868b]">{plan.desc}</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="text-center">
-                    <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
-                    <span className="text-gray-500">{plan.unit}</span>
-                    <span className="text-sm text-gray-400">{plan.period}</span>
+                    <span className="text-[36px] font-bold text-[#1d1d1f]">{plan.price}</span>
+                    <span className="text-[#86868b]">{plan.unit}</span>
+                    <span className="text-[14px] text-[#86868b]">{plan.period}</span>
                   </div>
-                  <div className="text-center text-sm text-violet-600 font-medium">
+                  <div className="text-center text-[14px] text-[#1d1d1f] font-medium">
                     <Zap className="h-3.5 w-3.5 inline mr-1" />
                     {plan.credits === 999 ? "无限额度" : `${plan.credits} 次/月`}
                   </div>
                   <div className="space-y-2">
                     {plan.features.map((f, j) => (
-                      <div key={j} className="flex items-center gap-2 text-sm">
+                      <div key={j} className="flex items-center gap-2 text-[14px]">
                         <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
-                        <span className="text-gray-700">{f}</span>
+                        <span className="text-[#666]">{f}</span>
                       </div>
                     ))}
                     {plan.disabled.map((f, j) => (
-                      <div key={j} className="flex items-center gap-2 text-sm">
-                        <span className="h-4 w-4 flex-shrink-0 text-gray-300">✕</span>
-                        <span className="text-gray-400">{f}</span>
+                      <div key={j} className="flex items-center gap-2 text-[14px]">
+                        <span className="h-4 w-4 flex-shrink-0 text-[#ccc]">✕</span>
+                        <span className="text-[#86868b]">{f}</span>
                       </div>
                     ))}
                   </div>
-                  <Link href={plan.price === 0 ? "/create" : "/register"} className="block">
+                  <Link href={plan.price === 0 ? "/workspace/create" : "/register"} className="block">
                     <Button
-                      className={`w-full ${plan.highlight ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white" : ""}`}
+                      className={`w-full rounded-xl ${plan.highlight ? "bg-[#1d1d1f] text-white hover:bg-[#333]" : ""}`}
                       variant={plan.highlight ? "default" : "outline"}
                     >
                       {plan.cta}
@@ -198,14 +199,14 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-white">
         <div className="max-w-3xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">常见问题</h2>
+          <h2 className="text-[24px] font-bold text-center text-[#1d1d1f] mb-8">常见问题</h2>
           <div className="space-y-6">
             {faqs.map((faq, i) => (
               <div key={i}>
-                <h3 className="font-medium text-gray-900 mb-2">{faq.q}</h3>
-                <p className="text-sm text-gray-500">{faq.a}</p>
+                <h3 className="font-medium text-[#1d1d1f] mb-2 text-[16px]">{faq.q}</h3>
+                <p className="text-[14px] text-[#86868b]">{faq.a}</p>
               </div>
             ))}
           </div>

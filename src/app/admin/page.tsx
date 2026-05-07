@@ -13,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const stats = [
   { label: "总用户", value: "2,156", change: "+12%", icon: Users, color: "text-blue-600 bg-blue-50" },
-  { label: "今日任务", value: "89", change: "+8%", icon: ListTodo, color: "text-violet-600 bg-violet-50" },
+  { label: "今日任务", value: "89", change: "+8%", icon: ListTodo, color: "text-[#1d1d1f] bg-[#f5f5f7]" },
   { label: "生成图片", value: "10,432", change: "+23%", icon: Image, color: "text-emerald-600 bg-emerald-50" },
   { label: "总收入", value: "¥48,920", change: "+15%", icon: CreditCard, color: "text-amber-600 bg-amber-50" },
 ];
@@ -73,7 +73,7 @@ export default function AdminPage() {
                     <span className="text-sm text-gray-600 w-16">{p.platform}</span>
                     <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full"
+                        className="h-full bg-[#1d1d1f] rounded-full"
                         style={{ width: `${p.pct}%` }}
                       />
                     </div>

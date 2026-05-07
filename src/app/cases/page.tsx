@@ -29,7 +29,7 @@ const cases = [
     beforeDesc: "产品平铺图，无场景感",
     afterDesc: "AI 生成科技感场景图 + 参数详情图",
     images: ["主图", "使用场景", "细节特写", "参数图"],
-    color: "from-violet-500 to-purple-500",
+    color: "from-slate-500 to-gray-600",
   },
   {
     category: "食品",
@@ -69,24 +69,27 @@ const stats = [
 
 export default function CasesPage() {
   return (
-    <div className="min-h-screen bg-white">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f]">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[#e5e5e5]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-14">
             <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
-                <Sparkles className="h-5 w-5 text-white" />
+              <div className="h-7 w-7 rounded-lg bg-[#1d1d1f] flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">图流 AI</span>
+              <span className="text-[16px] font-semibold tracking-tight">燎原 AI</span>
             </div>
-            <div className="hidden md:flex items-center space-x-8 text-sm">
-              <Link href="/" className="text-gray-600 hover:text-gray-900">首页</Link>
-              <Link href="/features" className="text-gray-600 hover:text-gray-900">功能介绍</Link>
-              <span className="text-violet-600 font-medium">案例展示</span>
-              <Link href="/pricing" className="text-gray-600 hover:text-gray-900">价格套餐</Link>
+            <div className="hidden md:flex items-center space-x-8 text-[14px]">
+              <Link href="/" className="text-[#86868b] hover:text-[#1d1d1f] transition-colors">首页</Link>
+              <Link href="/features" className="text-[#86868b] hover:text-[#1d1d1f] transition-colors">功能介绍</Link>
+              <span className="text-[#1d1d1f] font-medium">案例展示</span>
+              <Link href="/pricing" className="text-[#86868b] hover:text-[#1d1d1f] transition-colors">价格套餐</Link>
             </div>
-            <Link href="/create">
-              <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white">免费开始</Button>
+            <Link href="/workspace/create">
+              <Button className="bg-[#1d1d1f] text-white hover:bg-[#333] rounded-full text-[14px] font-medium cursor-pointer transition-all hover:shadow-lg hover:shadow-black/10">
+                免费开始
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
             </Link>
           </div>
         </div>
@@ -94,11 +97,10 @@ export default function CasesPage() {
 
       <section className="pt-28 pb-12 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            看看 AI 生成的
-            <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">真实效果</span>
+          <h1 className="text-[40px] md:text-[48px] font-bold text-[#1d1d1f] mb-4 tracking-[-0.02em]">
+            看看 AI 生成的真实效果
           </h1>
-          <p className="text-lg text-gray-500">不同品类、不同平台的生成案例</p>
+          <p className="text-[18px] text-[#86868b]">不同品类、不同平台的生成案例</p>
         </div>
       </section>
 
@@ -107,8 +109,8 @@ export default function CasesPage() {
           <div className="grid grid-cols-4 gap-6 mb-16">
             {stats.map((s, i) => (
               <div key={i} className="text-center">
-                <div className="text-3xl font-bold bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">{s.value}</div>
-                <div className="text-sm text-gray-500 mt-1">{s.label}</div>
+                <div className="text-[32px] font-bold text-[#1d1d1f]">{s.value}</div>
+                <div className="text-[14px] text-[#86868b] mt-1">{s.label}</div>
               </div>
             ))}
           </div>
@@ -116,30 +118,30 @@ export default function CasesPage() {
       </section>
 
       <section className="py-8 px-4">
-        <div className="max-w-6xl mx-auto space-y-8">
+        <div className="max-w-6xl mx-auto space-y-6">
           {cases.map((c, i) => (
-            <Card key={i} className="border-0 shadow-sm overflow-hidden">
+            <Card key={i} className="border border-[#e5e5e5] rounded-2xl overflow-hidden">
               <CardContent className="p-0">
                 <div className="grid md:grid-cols-2">
                   <div className="p-8">
                     <div className="flex items-center gap-2 mb-4">
-                      <span className="px-2.5 py-1 rounded-full bg-violet-100 text-violet-700 text-xs font-medium">{c.category}</span>
-                      <span className="px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">{c.platform}</span>
+                      <span className="px-2.5 py-1 rounded-full bg-[#f5f5f7] text-[#1d1d1f] text-[12px] font-medium border border-[#e5e5e5]">{c.category}</span>
+                      <span className="px-2.5 py-1 rounded-full bg-[#f5f5f7] text-[#666] text-[12px] font-medium border border-[#e5e5e5]">{c.platform}</span>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">{c.productName}</h3>
+                    <h3 className="text-[20px] font-bold text-[#1d1d1f] mb-4">{c.productName}</h3>
                     <div className="space-y-3 mb-6">
                       <div className="flex items-start gap-2">
-                        <span className="text-red-400 text-sm mt-0.5">✕</span>
-                        <p className="text-sm text-gray-500">{c.beforeDesc}</p>
+                        <span className="text-red-400 text-[14px] mt-0.5">✕</span>
+                        <p className="text-[14px] text-[#86868b]">{c.beforeDesc}</p>
                       </div>
                       <div className="flex items-start gap-2">
-                        <span className="text-green-500 text-sm mt-0.5">✓</span>
-                        <p className="text-sm text-gray-700">{c.afterDesc}</p>
+                        <span className="text-green-500 text-[14px] mt-0.5">✓</span>
+                        <p className="text-[14px] text-[#1d1d1f]">{c.afterDesc}</p>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {c.images.map((img, j) => (
-                        <span key={j} className="px-2 py-1 rounded bg-gray-100 text-xs text-gray-600">{img}</span>
+                        <span key={j} className="px-2 py-1 rounded-lg bg-[#f5f5f7] text-[12px] text-[#666] border border-[#e5e5e5]">{img}</span>
                       ))}
                     </div>
                   </div>
@@ -147,7 +149,7 @@ export default function CasesPage() {
                     <div className="grid grid-cols-2 gap-3 w-full max-w-[280px]">
                       {c.images.map((img, j) => (
                         <div key={j} className="aspect-square bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                          <span className="text-white/80 text-xs font-medium">{img}</span>
+                          <span className="text-white/80 text-[12px] font-medium">{img}</span>
                         </div>
                       ))}
                     </div>
@@ -159,12 +161,12 @@ export default function CasesPage() {
         </div>
       </section>
 
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">亲自试试效果</h2>
-          <p className="text-gray-500 mb-8">上传你的产品图，看看 AI 能生成什么</p>
-          <Link href="/create">
-            <Button size="lg" className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-8 h-12">
+          <h2 className="text-[24px] font-bold text-[#1d1d1f] mb-4">亲自试试效果</h2>
+          <p className="text-[#86868b] mb-8 text-[16px]">上传你的产品图，看看 AI 能生成什么</p>
+          <Link href="/workspace/create">
+            <Button size="lg" className="bg-[#1d1d1f] text-white hover:bg-[#333] px-8 h-12 rounded-full font-medium cursor-pointer transition-all hover:shadow-lg hover:shadow-black/10">
               <Upload className="mr-2 h-5 w-5" />
               上传产品图试试
             </Button>

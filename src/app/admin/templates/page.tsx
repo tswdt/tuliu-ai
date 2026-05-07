@@ -32,7 +32,7 @@ export default function AdminTemplatesPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">模板管理</h1>
-        <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white">
+        <Button className="bg-[#1d1d1f] hover:bg-[#333] text-white">
           <Plus className="h-4 w-4 mr-2" />
           新建模板
         </Button>
@@ -46,7 +46,7 @@ export default function AdminTemplatesPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="搜索模板..."
-            className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+            className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -70,7 +70,7 @@ export default function AdminTemplatesPage() {
                 <tr key={t.id} className="border-b last:border-0 hover:bg-gray-50">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <LayoutTemplate className="h-4 w-4 text-violet-500" />
+                      <LayoutTemplate className="h-4 w-4 text-[#1d1d1f]" />
                       <span className="text-sm font-medium text-gray-900">{t.name}</span>
                     </div>
                   </td>

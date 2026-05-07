@@ -55,7 +55,7 @@ const recentProjects = [
     time: "昨天",
     category: "3C",
     icon: Cpu,
-    color: "bg-violet-500",
+    color: "bg-slate-500",
   },
   {
     id: "4",
@@ -71,12 +71,12 @@ const recentProjects = [
 ];
 
 const recentImages = [
-  { id: "1", label: "主图", color: "from-violet-400 to-indigo-400", project: "纯棉T恤" },
-  { id: "2", label: "场景图", color: "from-blue-400 to-cyan-400", project: "蓝牙耳机" },
-  { id: "3", label: "细节图", color: "from-pink-400 to-rose-400", project: "精华液" },
-  { id: "4", label: "卖点图", color: "from-amber-400 to-orange-400", project: "绿茶礼盒" },
-  { id: "5", label: "白底图", color: "from-emerald-400 to-teal-400", project: "蓝牙耳机" },
-  { id: "6", label: "参数图", color: "from-gray-400 to-slate-400", project: "纯棉T恤" },
+  { id: "1", label: "主图", color: "from-slate-300 to-gray-400", project: "纯棉T恤" },
+  { id: "2", label: "场景图", color: "from-blue-300 to-cyan-300", project: "蓝牙耳机" },
+  { id: "3", label: "细节图", color: "from-pink-300 to-rose-300", project: "精华液" },
+  { id: "4", label: "卖点图", color: "from-amber-300 to-orange-300", project: "绿茶礼盒" },
+  { id: "5", label: "白底图", color: "from-emerald-300 to-teal-300", project: "蓝牙耳机" },
+  { id: "6", label: "参数图", color: "from-gray-300 to-slate-300", project: "纯棉T恤" },
 ];
 
 const templates = [
@@ -105,7 +105,7 @@ const templates = [
     platform: "京东",
     useCount: "1.5k",
     icon: Cpu,
-    color: "bg-violet-50 text-violet-600",
+    color: "bg-blue-50 text-blue-600",
   },
   {
     id: "4",
@@ -129,11 +129,11 @@ export default function WorkspacePage() {
     <div className="p-6 space-y-6 max-w-[1200px]">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">工作台</h1>
+          <h1 className="text-xl font-semibold text-[#1d1d1f]">工作台</h1>
           <p className="text-sm text-gray-500 mt-0.5">欢迎回来，开始创建商品视觉素材</p>
         </div>
-        <Link href="/workspace/new">
-          <Button className="bg-gray-900 hover:bg-gray-800 text-white h-9 text-sm">
+        <Link href="/workspace/create">
+          <Button className="bg-[#1d1d1f] hover:bg-[#333] text-white h-9 text-sm">
             <Plus className="h-4 w-4 mr-1.5" />
             新建详情页项目
           </Button>
@@ -145,8 +145,8 @@ export default function WorkspacePage() {
           <Card className="border-0 shadow-sm">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold text-gray-900">最近项目</h2>
-                <Link href="/workspace/history" className="text-xs text-violet-600 hover:text-violet-700 flex items-center gap-0.5">
+                <h2 className="text-sm font-semibold text-[#1d1d1f]">最近项目</h2>
+                <Link href="/workspace/history" className="text-xs text-[#1d1d1f] hover:text-[#333] flex items-center gap-0.5">
                   查看全部 <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
@@ -161,7 +161,7 @@ export default function WorkspacePage() {
                             <Icon className="h-4 w-4 text-white" />
                           </div>
                           <div>
-                            <div className="text-sm font-medium text-gray-900 group-hover:text-violet-600 transition-colors">{p.name}</div>
+                            <div className="text-sm font-medium text-[#1d1d1f] group-hover:text-[#333] transition-colors">{p.name}</div>
                             <div className="text-xs text-gray-400 mt-0.5">{p.platform} · {p.images} 张图 · {p.time}</div>
                           </div>
                         </div>
@@ -177,7 +177,7 @@ export default function WorkspacePage() {
                               生成中
                             </span>
                           )}
-                          <ArrowRight className="h-3.5 w-3.5 text-gray-300 group-hover:text-violet-400 transition-colors" />
+                          <ArrowRight className="h-3.5 w-3.5 text-gray-300 group-hover:text-[#999] transition-colors" />
                         </div>
                       </div>
                     </Link>
@@ -190,8 +190,8 @@ export default function WorkspacePage() {
           <Card className="border-0 shadow-sm">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold text-gray-900">最近生成图片</h2>
-                <Link href="/workspace/generation-history" className="text-xs text-violet-600 hover:text-violet-700 flex items-center gap-0.5">
+                <h2 className="text-sm font-semibold text-[#1d1d1f]">最近生成图片</h2>
+                <Link href="/workspace/generation-history" className="text-xs text-[#1d1d1f] hover:text-[#333] flex items-center gap-0.5">
                   查看全部 <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
@@ -213,15 +213,15 @@ export default function WorkspacePage() {
         </div>
 
         <div className="space-y-6">
-          <Card className="border-0 shadow-sm bg-gradient-to-br from-gray-900 to-gray-800">
+          <Card className="border-0 shadow-sm bg-gradient-to-br from-[#1d1d1f] to-[#333]">
             <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="h-4 w-4 text-violet-400" />
+                <Sparkles className="h-4 w-4 text-white/80" />
                 <span className="text-sm font-medium text-white">快速开始</span>
               </div>
               <p className="text-xs text-gray-400 mb-4">上传一张产品图，AI 自动生成整套电商视觉素材</p>
-              <Link href="/workspace/new">
-                <Button className="w-full bg-violet-600 hover:bg-violet-700 text-white h-9 text-sm">
+              <Link href="/workspace/create">
+                <Button className="w-full bg-white text-[#1d1d1f] hover:bg-gray-100 h-9 text-sm">
                   <Plus className="h-4 w-4 mr-1.5" />
                   新建详情页项目
                 </Button>
@@ -232,8 +232,8 @@ export default function WorkspacePage() {
           <Card className="border-0 shadow-sm">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold text-gray-900">推荐模板</h2>
-                <Link href="/workspace/templates" className="text-xs text-violet-600 hover:text-violet-700 flex items-center gap-0.5">
+                <h2 className="text-sm font-semibold text-[#1d1d1f]">推荐模板</h2>
+                <Link href="/workspace/templates" className="text-xs text-[#1d1d1f] hover:text-[#333] flex items-center gap-0.5">
                   更多 <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
@@ -246,7 +246,7 @@ export default function WorkspacePage() {
                         <Icon className="h-4 w-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-900 group-hover:text-violet-600 transition-colors truncate">{t.name}</div>
+                        <div className="text-sm font-medium text-[#1d1d1f] group-hover:text-[#333] transition-colors truncate">{t.name}</div>
                         <div className="text-[11px] text-gray-400">{t.platform} · {t.useCount} 次使用</div>
                       </div>
                     </div>
@@ -259,16 +259,16 @@ export default function WorkspacePage() {
           <Card className="border-0 shadow-sm">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold text-gray-900">使用教程</h2>
+                <h2 className="text-sm font-semibold text-[#1d1d1f]">使用教程</h2>
               </div>
               <div className="space-y-2">
                 {tutorials.map((t, i) => (
                   <div key={i} className="flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group">
-                    <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 group-hover:bg-violet-50 transition-colors">
-                      <PlayCircle className="h-4 w-4 text-gray-400 group-hover:text-violet-500 transition-colors" />
+                    <div className="h-8 w-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 group-hover:bg-[#f5f5f7] transition-colors">
+                      <PlayCircle className="h-4 w-4 text-gray-400 group-hover:text-[#1d1d1f] transition-colors" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm text-gray-700 group-hover:text-violet-600 transition-colors truncate">{t.title}</div>
+                      <div className="text-sm text-gray-700 group-hover:text-[#1d1d1f] transition-colors truncate">{t.title}</div>
                       <div className="text-[11px] text-gray-400">{t.duration}</div>
                     </div>
                   </div>

@@ -3,48 +3,26 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
+  --background: #f5f5f7;
+  --foreground: #1d1d1f;
   --card: #ffffff;
-  --card-foreground: #0f172a;
+  --card-foreground: #1d1d1f;
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #2563eb;
+  --popover-foreground: #1d1d1f;
+  --primary: #1d1d1f;
   --primary-foreground: #ffffff;
-  --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #f1f5f9;
-  --accent-foreground: #0f172a;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #2563eb;
-  --radius: 0.5rem;
-}
-
-.dark {
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --card: #1e293b;
-  --card-foreground: #f8fafc;
-  --popover: #1e293b;
-  --popover-foreground: #f8fafc;
-  --primary: #3b82f6;
-  --primary-foreground: #0f172a;
-  --secondary: #334155;
-  --secondary-foreground: #f8fafc;
-  --muted: #334155;
-  --muted-foreground: #94a3b8;
-  --accent: #334155;
-  --accent-foreground: #f8fafc;
-  --destructive: #dc2626;
-  --destructive-foreground: #f8fafc;
-  --border: #334155;
-  --input: #334155;
-  --ring: #60a5fa;
+  --secondary: #f5f5f7;
+  --secondary-foreground: #1d1d1f;
+  --muted: #f5f5f7;
+  --muted-foreground: #86868b;
+  --accent: #f5f5f7;
+  --accent-foreground: #1d1d1f;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #1d1d1f;
+  --radius: 0.75rem;
 }
 
 * {
@@ -66,12 +44,11 @@ body {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.5;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
 }
 
 a {
@@ -83,13 +60,109 @@ a {
   .text-balance {
     text-wrap: balance;
   }
-  
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* 统一交互样式 - 按钮 */
+  .interactive-button {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .interactive-button:hover:not(:disabled) {
+    @apply -translate-y-0.5 shadow-md;
+  }
+
+  .interactive-button:active:not(:disabled) {
+    @apply scale-[0.98];
+  }
+
+  .interactive-button:focus-visible {
+    @apply ring-2 ring-black outline-none;
+  }
+
+  .interactive-button:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  /* 统一交互样式 - 卡片 */
+  .interactive-card {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .interactive-card:hover:not(:disabled) {
+    @apply -translate-y-0.5 shadow-md border-gray-400;
+  }
+
+  .interactive-card:active:not(:disabled) {
+    @apply scale-[0.98];
+  }
+
+  .interactive-card:focus-visible {
+    @apply ring-2 ring-black outline-none;
+  }
+
+  .interactive-card:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  .interactive-card.selected {
+    @apply ring-2 ring-[#1d1d1f] border-[#1d1d1f] bg-[#f5f5f7];
+  }
+
+  /* 统一交互样式 - Tab/分段按钮 */
+  .interactive-tab {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .interactive-tab:hover:not(.selected):not(:disabled) {
+    @apply bg-gray-100 text-gray-900 border-gray-300;
+  }
+
+  .interactive-tab:active:not(:disabled) {
+    @apply scale-[0.98];
+  }
+
+  .interactive-tab.selected {
+    @apply bg-[#1d1d1f] text-white;
+  }
+
+  .interactive-tab:focus-visible {
+    @apply ring-2 ring-black outline-none;
+  }
+
+  .interactive-tab:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  /* 统一交互样式 - 上传卡片 */
+  .interactive-upload {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .interactive-upload:hover:not(:disabled) {
+    @apply bg-[#f7f7f8] border-gray-400 -translate-y-0.5;
+  }
+
+  .interactive-upload:active:not(:disabled) {
+    @apply scale-[0.98];
+  }
+
+  .interactive-upload.drag-active {
+    @apply bg-violet-50 border-violet-500 shadow-lg;
+  }
+
+  .interactive-upload:focus-visible {
+    @apply ring-2 ring-black outline-none;
+  }
+
+  .interactive-upload:disabled {
+    @apply opacity-50 cursor-not-allowed;
   }
 }

@@ -138,7 +138,7 @@ export default function AdminPlatformRulesPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">平台规则管理</h1>
-        <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white">
+        <Button className="bg-[#1d1d1f] hover:bg-[#333] text-white">
           <Plus className="h-4 w-4 mr-2" />
           添加平台
         </Button>
@@ -150,7 +150,7 @@ export default function AdminPlatformRulesPage() {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Settings className="h-4 w-4 text-violet-500" />
+                  <Settings className="h-4 w-4 text-[#1d1d1f]" />
                   {rule.name}
                 </CardTitle>
                 <div className="flex items-center gap-1">
@@ -202,7 +202,7 @@ export default function AdminPlatformRulesPage() {
                   </div>
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" size="sm" onClick={() => setEditingId(null)}>取消</Button>
-                    <Button size="sm" className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white" onClick={() => setEditingId(null)}>
+                    <Button size="sm" className="bg-[#1d1d1f] hover:bg-[#333] text-white" onClick={() => setEditingId(null)}>
                       <Save className="h-3.5 w-3.5 mr-1" />
                       保存
                     </Button>

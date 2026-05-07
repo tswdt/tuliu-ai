@@ -59,7 +59,7 @@ const initialPages: PageItem[] = [
     id: "p1",
     label: "主图",
     type: "main",
-    gradient: "from-violet-400 to-indigo-400",
+    gradient: "from-slate-400 to-gray-500",
     elements: [
       { id: "e1", kind: "image", x: 0, y: 0, width: 400, height: 400, content: "产品主图" },
       { id: "e2", kind: "text", x: 20, y: 340, width: 360, height: 40, content: "纯棉圆领短袖T恤", fontSize: 24, fontColor: "#ffffff", bold: true, align: "center" },
@@ -179,7 +179,7 @@ export default function EditorPage() {
         </div>
         <div className="flex items-center gap-1">
           <span className="text-xs text-gray-500 mr-2">纯棉休闲T恤 · 淘宝</span>
-          <Button size="sm" className="bg-violet-600 hover:bg-violet-700 text-white h-8 px-3 text-xs">
+          <Button size="sm" className="bg-[#1d1d1f] hover:bg-[#333] text-white h-8 px-3 text-xs">
             <Download className="h-3.5 w-3.5 mr-1" />
             导出
           </Button>
@@ -205,7 +205,7 @@ export default function EditorPage() {
                   onClick={() => { setActivePageId(page.id); setSelectedElementId(null); }}
                   className={`rounded-lg overflow-hidden cursor-pointer transition-all ${
                     activePageId === page.id
-                      ? "ring-2 ring-violet-500 ring-offset-1 ring-offset-[#252536]"
+                      ? "ring-2 ring-blue-500 ring-offset-1 ring-offset-[#252536]"
                       : "hover:ring-1 hover:ring-gray-600"
                   }`}
                 >
@@ -227,7 +227,7 @@ export default function EditorPage() {
             <button
               onClick={() => setTool("select")}
               className={`h-8 w-8 rounded-md flex items-center justify-center transition-colors ${
-                tool === "select" ? "bg-violet-600 text-white" : "bg-[#252536] text-gray-400 hover:text-white"
+                tool === "select" ? "bg-blue-600 text-white" : "bg-[#252536] text-gray-400 hover:text-white"
               }`}
             >
               <MousePointer2 className="h-4 w-4" />
@@ -235,7 +235,7 @@ export default function EditorPage() {
             <button
               onClick={() => setTool("hand")}
               className={`h-8 w-8 rounded-md flex items-center justify-center transition-colors ${
-                tool === "hand" ? "bg-violet-600 text-white" : "bg-[#252536] text-gray-400 hover:text-white"
+                tool === "hand" ? "bg-blue-600 text-white" : "bg-[#252536] text-gray-400 hover:text-white"
               }`}
             >
               <Hand className="h-4 w-4" />
@@ -256,8 +256,8 @@ export default function EditorPage() {
                   key={el.id}
                   className={`absolute cursor-move ${
                     selectedElementId === el.id
-                      ? "ring-2 ring-violet-500 ring-offset-0"
-                      : "hover:ring-1 hover:ring-violet-300"
+                      ? "ring-2 ring-blue-500 ring-offset-0"
+                      : "hover:ring-1 hover:ring-blue-300"
                   }`}
                   style={{
                     left: el.x,
@@ -293,10 +293,10 @@ export default function EditorPage() {
                   )}
                   {selectedElementId === el.id && (
                     <>
-                      <div className="absolute -top-1 -left-1 h-2.5 w-2.5 bg-violet-500 rounded-full cursor-nw-resize" />
-                      <div className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-violet-500 rounded-full cursor-ne-resize" />
-                      <div className="absolute -bottom-1 -left-1 h-2.5 w-2.5 bg-violet-500 rounded-full cursor-sw-resize" />
-                      <div className="absolute -bottom-1 -right-1 h-2.5 w-2.5 bg-violet-500 rounded-full cursor-se-resize" />
+                      <div className="absolute -top-1 -left-1 h-2.5 w-2.5 bg-blue-500 rounded-full cursor-nw-resize" />
+                      <div className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-blue-500 rounded-full cursor-ne-resize" />
+                      <div className="absolute -bottom-1 -left-1 h-2.5 w-2.5 bg-blue-500 rounded-full cursor-sw-resize" />
+                      <div className="absolute -bottom-1 -right-1 h-2.5 w-2.5 bg-blue-500 rounded-full cursor-se-resize" />
                     </>
                   )}
                 </div>
@@ -331,7 +331,7 @@ export default function EditorPage() {
                         <Textarea
                           value={selectedElement.content}
                           onChange={(e) => updateElement(selectedElement.id, { content: e.target.value })}
-                          className="bg-[#1e1e2e] border-[#444460] text-gray-200 text-xs min-h-[60px] focus:ring-violet-500 resize-none"
+                          className="bg-[#1e1e2e] border-[#444460] text-gray-200 text-xs min-h-[60px] focus:ring-blue-500 resize-none"
                         />
                       </div>
                       <div>
@@ -341,7 +341,7 @@ export default function EditorPage() {
                             type="number"
                             value={selectedElement.fontSize || 14}
                             onChange={(e) => updateElement(selectedElement.id, { fontSize: Number(e.target.value) })}
-                            className="bg-[#1e1e2e] border-[#444460] text-gray-200 text-xs h-8 w-20 focus:ring-violet-500"
+                            className="bg-[#1e1e2e] border-[#444460] text-gray-200 text-xs h-8 w-20 focus:ring-blue-500"
                           />
                           <span className="text-[11px] text-gray-500">px</span>
                         </div>
@@ -358,7 +358,7 @@ export default function EditorPage() {
                           <Input
                             value={selectedElement.fontColor || "#1f2937"}
                             onChange={(e) => updateElement(selectedElement.id, { fontColor: e.target.value })}
-                            className="bg-[#1e1e2e] border-[#444460] text-gray-200 text-xs h-8 flex-1 focus:ring-violet-500"
+                            className="bg-[#1e1e2e] border-[#444460] text-gray-200 text-xs h-8 flex-1 focus:ring-blue-500"
                           />
                         </div>
                       </div>
@@ -367,7 +367,7 @@ export default function EditorPage() {
                         <button
                           onClick={() => updateElement(selectedElement.id, { bold: !selectedElement.bold })}
                           className={`h-8 w-8 rounded-md flex items-center justify-center transition-colors ${
-                            selectedElement.bold ? "bg-violet-600 text-white" : "bg-[#1e1e2e] text-gray-400 hover:text-white border border-[#444460]"
+                            selectedElement.bold ? "bg-blue-600 text-white" : "bg-[#1e1e2e] text-gray-400 hover:text-white border border-[#444460]"
                           }`}
                         >
                           <Bold className="h-4 w-4" />
@@ -386,7 +386,7 @@ export default function EditorPage() {
                               onClick={() => updateElement(selectedElement.id, { align: a.value })}
                               className={`h-8 w-8 rounded-md flex items-center justify-center transition-colors ${
                                 selectedElement.align === a.value
-                                  ? "bg-violet-600 text-white"
+                                  ? "bg-blue-600 text-white"
                                   : "bg-[#1e1e2e] text-gray-400 hover:text-white border border-[#444460]"
                               }`}
                             >
@@ -403,19 +403,19 @@ export default function EditorPage() {
                       <div>
                         <label className="text-[11px] text-gray-500 mb-1.5 block">图片操作</label>
                         <div className="space-y-1.5">
-                          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-[#1e1e2e] border border-[#444460] text-xs text-gray-300 hover:border-violet-500 hover:text-violet-400 transition-colors">
+                          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-[#1e1e2e] border border-[#444460] text-xs text-gray-300 hover:border-blue-500 hover:text-blue-400 transition-colors">
                             <Replace className="h-3.5 w-3.5" />
                             替换图片
                           </button>
-                          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-[#1e1e2e] border border-[#444460] text-xs text-gray-300 hover:border-violet-500 hover:text-violet-400 transition-colors">
+                          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-[#1e1e2e] border border-[#444460] text-xs text-gray-300 hover:border-blue-500 hover:text-blue-400 transition-colors">
                             <Crop className="h-3.5 w-3.5" />
                             裁剪
                           </button>
-                          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-[#1e1e2e] border border-[#444460] text-xs text-gray-300 hover:border-violet-500 hover:text-violet-400 transition-colors">
+                          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-[#1e1e2e] border border-[#444460] text-xs text-gray-300 hover:border-blue-500 hover:text-blue-400 transition-colors">
                             <Move className="h-3.5 w-3.5" />
                             调整位置
                           </button>
-                          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-violet-600/20 border border-violet-500/30 text-xs text-violet-400 hover:bg-violet-600/30 transition-colors">
+                          <button className="w-full flex items-center gap-2 px-3 py-2 rounded-md bg-blue-600/20 border border-blue-500/30 text-xs text-blue-400 hover:bg-blue-600/30 transition-colors">
                             <Sparkles className="h-3.5 w-3.5" />
                             重新生成这张图
                           </button>
@@ -430,7 +430,7 @@ export default function EditorPage() {
                               type="number"
                               value={selectedElement.x}
                               onChange={(e) => updateElement(selectedElement.id, { x: Number(e.target.value) })}
-                              className="bg-[#1e1e2e] border-[#444460] text-gray-200 text-xs h-7 focus:ring-violet-500"
+                              className="bg-[#1e1e2e] border-[#444460] text-gray-200 text-xs h-7 focus:ring-blue-500"
                             />
                           </div>
                           <div>
@@ -439,7 +439,7 @@ export default function EditorPage() {
                               type="number"
                               value={selectedElement.y}
                               onChange={(e) => updateElement(selectedElement.id, { y: Number(e.target.value) })}
-                              className="bg-[#1e1e2e] border-[#444460] text-gray-200 text-xs h-7 focus:ring-violet-500"
+                              className="bg-[#1e1e2e] border-[#444460] text-gray-200 text-xs h-7 focus:ring-blue-500"
                             />
                           </div>
                         </div>
@@ -453,7 +453,7 @@ export default function EditorPage() {
                               type="number"
                               value={selectedElement.width}
                               onChange={(e) => updateElement(selectedElement.id, { width: Number(e.target.value) })}
-                              className="bg-[#1e1e2e] border-[#444460] text-gray-200 text-xs h-7 focus:ring-violet-500"
+                              className="bg-[#1e1e2e] border-[#444460] text-gray-200 text-xs h-7 focus:ring-blue-500"
                             />
                           </div>
                           <div>
@@ -462,7 +462,7 @@ export default function EditorPage() {
                               type="number"
                               value={selectedElement.height}
                               onChange={(e) => updateElement(selectedElement.id, { height: Number(e.target.value) })}
-                              className="bg-[#1e1e2e] border-[#444460] text-gray-200 text-xs h-7 focus:ring-violet-500"
+                              className="bg-[#1e1e2e] border-[#444460] text-gray-200 text-xs h-7 focus:ring-blue-500"
                             />
                           </div>
                         </div>

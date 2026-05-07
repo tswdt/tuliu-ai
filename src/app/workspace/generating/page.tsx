@@ -22,7 +22,7 @@ const stages = [
 
 export default function GeneratingPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-[#86868b]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1d1d1f]" /></div>}>
       <GeneratingContent />
     </Suspense>
   );
@@ -135,25 +135,25 @@ function GeneratingContent() {
     <div className="max-w-2xl mx-auto">
       <div className="flex flex-col items-center justify-center py-16">
         <div className="relative mb-8">
-          <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-200">
+          <div className="h-24 w-24 rounded-3xl bg-[#1d1d1f] flex items-center justify-center shadow-lg">
             <Sparkles className="h-12 w-12 text-white animate-pulse" />
           </div>
           <div className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-white shadow-lg flex items-center justify-center">
-            <Loader2 className="h-5 w-5 text-violet-600 animate-spin" />
+            <Loader2 className="h-5 w-5 text-[#1d1d1f] animate-spin" />
           </div>
         </div>
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">AI 正在生成</h1>
-        <p className="text-sm text-gray-500 mb-8">请稍候，系统正在为您生成商品视觉素材</p>
+        <h1 className="text-[24px] font-bold text-[#1d1d1f] mb-2">AI 正在生成</h1>
+        <p className="text-[14px] text-[#86868b] mb-8">请稍候，系统正在为您生成商品视觉素材</p>
 
         <div className="w-full mb-8">
-          <div className="flex justify-between text-xs text-gray-400 mb-2">
+          <div className="flex justify-between text-[12px] text-[#86868b] mb-2">
             <span>进度</span>
             <span>{Math.round(progress)}%</span>
           </div>
-          <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-3 bg-[#f5f5f7] rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full transition-all duration-300"
+              className="h-full bg-[#1d1d1f] rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -169,16 +169,16 @@ function GeneratingContent() {
               <div
                 key={stage.id}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                  isActive ? "bg-violet-50 border border-violet-200" : isDone ? "bg-green-50" : "bg-gray-50"
+                  isActive ? "bg-[#f5f5f7] border border-[#e5e5e5]" : isDone ? "bg-[#f0fdf4]" : "bg-[#f5f5f7]"
                 }`}
               >
                 <div
                   className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
                     isActive
-                      ? "bg-violet-600 text-white"
+                      ? "bg-[#1d1d1f] text-white"
                       : isDone
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-200 text-gray-400"
+                      ? "bg-[#1d1d1f] text-white"
+                      : "bg-[#e5e5e5] text-[#999]"
                   }`}
                 >
                   {isActive ? (
@@ -190,19 +190,19 @@ function GeneratingContent() {
                   )}
                 </div>
                 <div className="flex-1">
-                  <div className={`text-sm font-medium ${isActive ? "text-violet-700" : isDone ? "text-green-700" : "text-gray-400"}`}>
+                  <div className={`text-[14px] font-medium ${isActive ? "text-[#1d1d1f]" : isDone ? "text-[#1d1d1f]" : "text-[#999]"}`}>
                     {stage.label}
                   </div>
                   {isActive && (
-                    <div className="mt-1 h-1.5 bg-violet-100 rounded-full overflow-hidden">
+                    <div className="mt-1 h-1.5 bg-[#f5f5f7] rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-violet-600 rounded-full transition-all duration-200"
+                        className="h-full bg-[#1d1d1f] rounded-full transition-all duration-200"
                         style={{ width: `${stageProgress}%` }}
                       />
                     </div>
                   )}
                 </div>
-                {isDone && <span className="text-xs text-green-600">完成</span>}
+                {isDone && <span className="text-[12px] text-[#1d1d1f] font-medium">完成</span>}
               </div>
             );
           })}

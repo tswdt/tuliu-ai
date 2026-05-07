@@ -78,12 +78,12 @@ export default function ExportPage() {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-8">
-        <Button variant="ghost" size="sm" onClick={() => window.history.back()} className="mb-4">
+        <Button variant="ghost" size="sm" onClick={() => window.history.back()} className="mb-4 text-[#666] hover:text-[#1d1d1f] cursor-pointer">
           <ArrowLeft className="h-4 w-4 mr-2" />
           返回
         </Button>
-        <h1 className="text-2xl font-bold text-gray-900">导出</h1>
-        <p className="text-sm text-gray-500 mt-1">选择需要导出的内容格式</p>
+        <h1 className="text-[24px] font-bold text-[#1d1d1f]">导出</h1>
+        <p className="text-[14px] text-[#86868b] mt-1">选择需要导出的内容格式</p>
       </div>
 
       <div className="space-y-3 mb-8">
@@ -93,28 +93,28 @@ export default function ExportPage() {
           return (
             <Card
               key={opt.id}
-              className={`cursor-pointer transition-all ${
-                isSelected ? "border-2 border-violet-500 shadow-md shadow-violet-100" : "border shadow-sm hover:shadow-md"
+              className={`cursor-pointer transition-all rounded-2xl ${
+                isSelected ? "border-2 border-[#1d1d1f] shadow-md" : "border border-[#e5e5e5] shadow-sm hover:shadow-md"
               }`}
               onClick={() => toggleSelect(opt.id)}
             >
               <CardContent className="py-4">
                 <div className="flex items-center gap-4">
                   <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${
-                    isSelected ? "bg-violet-100 text-violet-600" : "bg-gray-100 text-gray-400"
+                    isSelected ? "bg-[#f5f5f7] text-[#1d1d1f]" : "bg-[#f5f5f7] text-[#999]"
                   }`}>
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-900">{opt.title}</span>
-                      <span className="text-xs text-gray-400">{opt.format}</span>
-                      <span className="text-xs text-gray-300">{opt.size}</span>
+                      <span className="text-[14px] font-medium text-[#1d1d1f]">{opt.title}</span>
+                      <span className="text-[12px] text-[#86868b]">{opt.format}</span>
+                      <span className="text-[12px] text-[#ccc]">{opt.size}</span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
+                    <p className="text-[12px] text-[#86868b] mt-0.5">{opt.desc}</p>
                   </div>
                   <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${
-                    isSelected ? "border-violet-600 bg-violet-600" : "border-gray-300"
+                    isSelected ? "border-[#1d1d1f] bg-[#1d1d1f]" : "border-[#ccc]"
                   }`}>
                     {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-white" />}
                   </div>
@@ -126,12 +126,12 @@ export default function ExportPage() {
       </div>
 
       {exported ? (
-        <Card className="border-0 shadow-sm bg-green-50">
+        <Card className="border border-[#e5e5e5] rounded-2xl bg-[#f0fdf4]">
           <CardContent className="py-6 text-center">
-            <CheckCircle2 className="h-10 w-10 text-green-600 mx-auto mb-3" />
-            <h3 className="font-semibold text-green-900 mb-1">导出成功</h3>
-            <p className="text-sm text-green-600 mb-4">文件已开始下载</p>
-            <Button variant="outline" size="sm" onClick={() => setExported(false)}>
+            <CheckCircle2 className="h-10 w-10 text-[#1d1d1f] mx-auto mb-3" />
+            <h3 className="text-[16px] font-semibold text-[#1d1d1f] mb-1">导出成功</h3>
+            <p className="text-[14px] text-[#86868b] mb-4">文件已开始下载</p>
+            <Button variant="outline" size="sm" onClick={() => setExported(false)} className="rounded-xl border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] cursor-pointer">
               继续导出
             </Button>
           </CardContent>
@@ -140,7 +140,7 @@ export default function ExportPage() {
         <Button
           onClick={handleExport}
           disabled={selected.length === 0 || exporting}
-          className="w-full h-12 bg-gradient-to-r from-violet-600 to-indigo-600 text-white"
+          className="w-full h-12 bg-[#1d1d1f] text-white hover:bg-[#333] rounded-xl cursor-pointer"
         >
           {exporting ? (
             <>

@@ -6,7 +6,6 @@ import {
   Wand2,
   Target,
   Layers,
-  Image,
   FileText,
   Palette,
   Zap,
@@ -103,24 +102,27 @@ const workflowSteps = [
 
 export default function FeaturesPage() {
   return (
-    <div className="min-h-screen bg-white">
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f]">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[#e5e5e5]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-14">
             <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
-                <Sparkles className="h-5 w-5 text-white" />
+              <div className="h-7 w-7 rounded-lg bg-[#1d1d1f] flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">图流 AI</span>
+              <span className="text-[16px] font-semibold tracking-tight">燎原 AI</span>
             </div>
-            <div className="hidden md:flex items-center space-x-8 text-sm">
-              <Link href="/" className="text-gray-600 hover:text-gray-900">首页</Link>
-              <span className="text-violet-600 font-medium">功能介绍</span>
-              <Link href="/cases" className="text-gray-600 hover:text-gray-900">案例展示</Link>
-              <Link href="/pricing" className="text-gray-600 hover:text-gray-900">价格套餐</Link>
+            <div className="hidden md:flex items-center space-x-8 text-[14px]">
+              <Link href="/" className="text-[#86868b] hover:text-[#1d1d1f] transition-colors">首页</Link>
+              <span className="text-[#1d1d1f] font-medium">功能介绍</span>
+              <Link href="/cases" className="text-[#86868b] hover:text-[#1d1d1f] transition-colors">案例展示</Link>
+              <Link href="/pricing" className="text-[#86868b] hover:text-[#1d1d1f] transition-colors">价格套餐</Link>
             </div>
-            <Link href="/create">
-              <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white">免费开始</Button>
+            <Link href="/workspace/create">
+              <Button className="bg-[#1d1d1f] text-white hover:bg-[#333] rounded-full text-[14px] font-medium cursor-pointer transition-all hover:shadow-lg hover:shadow-black/10">
+                免费开始
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
             </Link>
           </div>
         </div>
@@ -128,34 +130,34 @@ export default function FeaturesPage() {
 
       <section className="pt-28 pb-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+          <h1 className="text-[40px] md:text-[48px] font-bold text-[#1d1d1f] mb-4 tracking-[-0.02em]">
             从上传到导出，
-            <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">全流程 AI 自动化</span>
+            <br className="sm:hidden" />全流程 AI 自动化
           </h1>
-          <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+          <p className="text-[18px] text-[#86868b] max-w-2xl mx-auto leading-[1.7]">
             不需要设计经验，不需要会写提示词，上传产品图就能生成整套电商视觉素材
           </p>
         </div>
       </section>
 
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-white">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-12">工作流程</h2>
+          <h2 className="text-[24px] font-bold text-center text-[#1d1d1f] mb-12">工作流程</h2>
           <div className="flex flex-col md:flex-row items-start gap-4">
             {workflowSteps.map((s, i) => (
               <div key={i} className="flex-1 relative">
-                <Card className="border-0 shadow-sm h-full">
+                <Card className="border border-[#e5e5e5] h-full rounded-2xl">
                   <CardContent className="pt-6 text-center">
-                    <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl bg-violet-100 text-violet-600 mb-4">
+                    <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl bg-[#f5f5f7] text-[#1d1d1f] mb-4">
                       {s.icon}
                     </div>
-                    <div className="text-xs font-bold text-violet-600 mb-1">步骤 {s.step}</div>
-                    <h3 className="font-semibold text-gray-900 mb-2">{s.title}</h3>
-                    <p className="text-sm text-gray-500">{s.desc}</p>
+                    <div className="text-[12px] font-bold text-[#86868b] mb-1">步骤 {s.step}</div>
+                    <h3 className="font-semibold text-[#1d1d1f] mb-2 text-[16px]">{s.title}</h3>
+                    <p className="text-[14px] text-[#86868b]">{s.desc}</p>
                   </CardContent>
                 </Card>
                 {i < workflowSteps.length - 1 && (
-                  <div className="hidden md:block absolute top-1/2 -right-3 text-gray-300">
+                  <div className="hidden md:block absolute top-1/2 -right-3 text-[#ccc]">
                     <ArrowRight className="h-5 w-5" />
                   </div>
                 )}
@@ -167,20 +169,20 @@ export default function FeaturesPage() {
 
       <section className="py-20">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-4">核心功能</h2>
-          <p className="text-gray-500 text-center mb-12">8 大核心能力，覆盖电商视觉生产全链路</p>
-          <div className="grid md:grid-cols-2 gap-6">
+          <h2 className="text-[24px] font-bold text-center text-[#1d1d1f] mb-4">核心功能</h2>
+          <p className="text-[#86868b] text-center mb-12 text-[16px]">8 大核心能力，覆盖电商视觉生产全链路</p>
+          <div className="grid md:grid-cols-2 gap-5">
             {coreFeatures.map((f, i) => (
-              <Card key={i} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+              <Card key={i} className="border border-[#e5e5e5] rounded-2xl hover:shadow-md transition-shadow">
                 <CardContent className="pt-6">
                   <div className="flex gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center flex-shrink-0">
+                    <div className="h-12 w-12 rounded-xl bg-[#f5f5f7] text-[#1d1d1f] flex items-center justify-center flex-shrink-0">
                       {f.icon}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">{f.title}</h3>
-                      <p className="text-sm text-gray-600 mb-2">{f.desc}</p>
-                      <p className="text-xs text-gray-400">{f.detail}</p>
+                      <h3 className="font-semibold text-[#1d1d1f] mb-1 text-[16px]">{f.title}</h3>
+                      <p className="text-[14px] text-[#666] mb-2">{f.desc}</p>
+                      <p className="text-[12px] text-[#86868b]">{f.detail}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -190,12 +192,12 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">开始体验</h2>
-          <p className="text-gray-500 mb-8">上传一张产品图，亲自感受 AI 生成的效果</p>
-          <Link href="/create">
-            <Button size="lg" className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-8 h-12">
+          <h2 className="text-[24px] font-bold text-[#1d1d1f] mb-4">开始体验</h2>
+          <p className="text-[#86868b] mb-8 text-[16px]">上传一张产品图，亲自感受 AI 生成的效果</p>
+          <Link href="/workspace/create">
+            <Button size="lg" className="bg-[#1d1d1f] text-white hover:bg-[#333] px-8 h-12 rounded-full font-medium cursor-pointer transition-all hover:shadow-lg hover:shadow-black/10">
               <Upload className="mr-2 h-5 w-5" />
               免费开始使用
             </Button>
