@@ -21,7 +21,7 @@ const navItems = [
   { href: "/workspace/generation-history", label: "生成历史", icon: Clock },
   { href: "/workspace/templates", label: "模板中心", icon: LayoutGrid },
   { href: "/workspace/credits", label: "积分余额", icon: Coins },
-  { href: "/workspace/credits", label: "账户设置", icon: Settings },
+  { href: "/workspace/settings", label: "账户设置", icon: Settings },
 ];
 
 export default function WorkspaceLayout({
@@ -31,11 +31,6 @@ export default function WorkspaceLayout({
 }) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const isLandingPage = pathname === "/workspace/new";
-
-  if (isLandingPage) {
-    return <>{children}</>;
-  }
 
   return (
     <div className="min-h-screen bg-[#f5f5f7]">
