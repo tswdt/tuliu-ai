@@ -148,12 +148,14 @@ export function buildImagePrompt(
     `颜色：${analysis.color.join('/')}`,
     `风格：${analysis.style}`,
     '',
+    `【目标平台】${platformRule.name} - ${platformRule.stylePreference}`,
     `【视觉风格】${styleDesc}`,
     `【价格定位】${priceDesc}`,
     `【图片类型】${typeInfo.label} - ${typeInfo.promptMod}`,
     `【尺寸比例】${sizeInfo.desc}`,
     `【清晰度】${qualityDesc}`,
     `【主体一致性】${consistencyDesc}`,
+    `【语言要求】${LANGUAGE_MAP[config.language] || '不添加文字'}`,
   ];
 
   if (config.targetAudiences.length > 0) {
@@ -172,8 +174,23 @@ export function buildImagePrompt(
     parts.push(`【主体锁定规则】${config.subjectLockRules.join('、')}`);
   }
 
+  if (platformRule.mainImageRules.length > 0) {
+    parts.push(`【平台规范】${platformRule.mainImageRules.join('；')}`);
+  }
+
   if (config.competitorReferenceModes.length > 0) {
-    parts.push(`【竞品参考方式】仅参考：${config.competitorReferenceModes.join('、')}`);
+    const refModeLabelMap: Record<string, string> = {
+      layout: '排版布局',
+      color: '配色方案',
+      mood: '氛围感觉',
+      'detail-structure': '详情页结构',
+      'no-copy-text': '不复制竞品文案',
+      'no-copy-logo': '不复制品牌Logo',
+      'no-copy-image': '不照搬竞品图片',
+    };
+    const modeLabels = config.competitorReferenceModes
+      .map(m => refModeLabelMap[m] || m);
+    parts.push(`【竞品参考方式】仅参考：${modeLabels.join('、')}`);
   }
 
   if (config.postProcessingOptions.length > 0) {
@@ -199,14 +216,43 @@ export function buildImagePrompt(
     ...categoryRule.negativeKeywords,
   ];
 
-  if (config.competitorReferenceModes.includes('不复制竞品文案')) {
-    negativeParts.push('任何文字内容', '文案', '标语');
+  if (config.competitorImageUrls && config.competitorImageUrls.length > 0) {
+    parts.push('');
+    parts.push('【竞品参考严格规则】');
+    parts.push('竞品图片仅作为风格/排版/氛围参考，绝对禁止：');
+    parts.push('- 禁止复制竞品文案、广告语、标语、任何文字内容');
+    parts.push('- 禁止复制竞品Logo、品牌标识、商标、品牌元素');
+    parts.push('- 禁止照搬竞品图片内容、构图、设计布局');
+    parts.push('- 禁止模仿竞品的视觉识别系统');
+    parts.push('只能参考以下方面：');
+    if (config.competitorReferenceModes.length > 0) {
+      const refModeMap: Record<string, string> = {
+        layout: '排版布局',
+        color: '配色方案',
+        mood: '氛围感觉',
+        'detail-structure': '详情页结构',
+      };
+      const allowedRefs = config.competitorReferenceModes
+        .map(m => refModeMap[m] || m)
+        .filter(Boolean);
+      if (allowedRefs.length > 0) {
+        parts.push(`允许参考：${allowedRefs.join('、')}`);
+      } else {
+        parts.push('允许参考：整体风格氛围（不复制具体内容）');
+      }
+    } else {
+      parts.push('允许参考：整体风格氛围（不复制具体内容）');
+    }
   }
-  if (config.competitorReferenceModes.includes('不复制品牌Logo')) {
-    negativeParts.push('品牌logo', '商标', '品牌标识');
+
+  if (config.competitorReferenceModes.includes('no-copy-text') || config.competitorReferenceModes.includes('不复制竞品文案')) {
+    negativeParts.push('任何文字内容', '文案', '标语', '广告语');
   }
-  if (config.competitorReferenceModes.includes('不照搬竞品图片')) {
-    negativeParts.push('直接复制构图', '照搬设计', '抄袭布局');
+  if (config.competitorReferenceModes.includes('no-copy-logo') || config.competitorReferenceModes.includes('不复制品牌Logo')) {
+    negativeParts.push('品牌logo', '商标', '品牌标识', '品牌元素');
+  }
+  if (config.competitorReferenceModes.includes('no-copy-image') || config.competitorReferenceModes.includes('不照搬竞品图片')) {
+    negativeParts.push('直接复制构图', '照搬设计', '抄袭布局', '复制图片内容');
   }
 
   const uniqueNegatives = [...new Set(negativeParts)];

@@ -44,7 +44,7 @@ function GeneratingContent() {
   useEffect(() => {
     const runWorkflow = async () => {
       try {
-        const res = await fetch("/api/workflow/analyze", {
+        const res = await fetch("/api/workflow/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

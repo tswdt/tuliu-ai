@@ -110,7 +110,7 @@ export default function CreateProjectPage() {
       setCurrentStep(3);
       setStatusText("正在提交 AI 分析...");
 
-      const workflowRes = await fetch("/api/workflow/analyze", {
+      const workflowRes = await fetch("/api/workflow/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

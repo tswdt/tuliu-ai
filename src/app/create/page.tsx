@@ -132,7 +132,7 @@ export default function CreatePage() {
       const uploadData = await uploadRes.json();
       const uploadedUrl = uploadData.imageUrl || imagePreview;
 
-      const res = await fetch("/api/workflow/analyze", {
+      const res = await fetch("/api/workflow/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -181,7 +181,7 @@ export default function CreatePage() {
     setGeneratingMessage("正在识别商品信息...");
 
     try {
-      const res = await fetch("/api/workflow/analyze", {
+      const res = await fetch("/api/workflow/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   Download,
@@ -11,9 +11,9 @@ import {
   FileText,
   CheckCircle2,
   Copy,
-  ExternalLink,
   AlertCircle,
   ArrowLeft,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +32,8 @@ export default function ResultPage() {
 function ResultContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [regenerateError, setRegenerateError] = useState<string | null>(null);
 
   let result: any = null;
   let hasRealData = false;
@@ -76,19 +78,13 @@ function ResultContent() {
   const projectId = result.projectId;
   const creditsUsed = result.creditsUsed;
   const balance = result.balance;
-
-  const imageColors = [
-    "from-slate-100 to-gray-200",
-    "from-blue-100 to-cyan-100",
-    "from-pink-100 to-rose-100",
-    "from-amber-100 to-orange-100",
-    "from-emerald-100 to-green-100",
-    "from-purple-100 to-fuchsia-100",
-  ];
+  const config = result.config || {};
 
   const handleDownload = async (imageUrl: string, fileName: string) => {
+    if (!imageUrl) return;
     try {
       const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error("下载失败");
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -113,6 +109,55 @@ function ResultContent() {
 
   const handleCopyText = (text: string) => {
     navigator.clipboard.writeText(text).catch(() => {});
+  };
+
+  const handleRegenerate = async () => {
+    if (!config.productImageUrls || config.productImageUrls.length === 0) {
+      router.push("/workspace/create");
+      return;
+    }
+
+    setIsRegenerating(true);
+    setRegenerateError(null);
+
+    try {
+      const res = await fetch("/api/workflow/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(config),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        if (res.status === 503) {
+          throw new Error("AI 服务未配置：请设置 DASHSCOPE_API_KEY 或 SUCHUANG_API_KEY 环境变量");
+        }
+        if (res.status === 402) {
+          throw new Error(`积分不足：${data.detail || "余额不足，请充值后再试"}`);
+        }
+        throw new Error(data.error || "重新生成失败");
+      }
+
+      const newResult = encodeURIComponent(
+        JSON.stringify({
+          projectId: data.projectId,
+          analysis: data.analysis,
+          images: data.images,
+          copy: data.copy,
+          platform: data.platform,
+          creditsUsed: data.creditsUsed,
+          balance: data.balance,
+          config,
+        })
+      );
+
+      router.replace(`/workspace/result?result=${newResult}`);
+    } catch (err) {
+      setRegenerateError((err as Error).message);
+    } finally {
+      setIsRegenerating(false);
+    }
   };
 
   return (
@@ -156,6 +201,22 @@ function ResultContent() {
         </div>
       </div>
 
+      {regenerateError && (
+        <div className="mb-4 bg-[#fef2f2] border border-[#fecaca] rounded-xl p-4 flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-[#ef4444] flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-[14px] font-medium text-[#991b1b]">重新生成失败</p>
+            <p className="text-[13px] text-[#b91c1c] mt-1">{regenerateError}</p>
+            <button
+              onClick={() => setRegenerateError(null)}
+              className="mt-2 text-[13px] text-[#991b1b] underline cursor-pointer hover:text-[#7f1d1d]"
+            >
+              关闭提示
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="mb-4">
         <div className="flex items-center gap-3">
           {["上传图片", "AI 识别", "配置生成", "生成结果"].map((step, i) => (
@@ -180,11 +241,16 @@ function ResultContent() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => router.push("/workspace/create")}
+              onClick={handleRegenerate}
+              disabled={isRegenerating}
               className="border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] rounded-xl cursor-pointer"
             >
-              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-              重新生成
+              {isRegenerating ? (
+                <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+              )}
+              {isRegenerating ? "重新生成中..." : "重新生成"}
             </Button>
           </div>
 
@@ -218,37 +284,41 @@ function ResultContent() {
                         {getOutputTypeLabel(img.type)}
                       </span>
                     </div>
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="h-8 rounded-lg"
-                          onClick={() =>
-                            handleDownload(img.url, `${getOutputTypeLabel(img.type)}-${(img.index || 0) + 1}.jpg`)
-                          }
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                        </Button>
+                    {img.url && (
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="h-8 rounded-lg"
+                            onClick={() =>
+                              handleDownload(img.url, `${getOutputTypeLabel(img.type)}-${(img.index || 0) + 1}.jpg`)
+                            }
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                   <div className="py-2 px-3">
                     <div className="flex items-center justify-between">
                       <span className="text-[12px] font-medium text-[#1d1d1f]">
                         {getOutputTypeLabel(img.type)} {img.index !== undefined ? `#${img.index + 1}` : ""}
                       </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 text-[12px] text-[#86868b] hover:text-[#1d1d1f] cursor-pointer"
-                        onClick={() =>
-                          handleDownload(img.url, `${getOutputTypeLabel(img.type)}-${(img.index || 0) + 1}.jpg`)
-                        }
-                      >
-                        <Download className="h-3 w-3 mr-1" />
-                        下载
-                      </Button>
+                      {img.url && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 text-[12px] text-[#86868b] hover:text-[#1d1d1f] cursor-pointer"
+                          onClick={() =>
+                            handleDownload(img.url, `${getOutputTypeLabel(img.type)}-${(img.index || 0) + 1}.jpg`)
+                          }
+                        >
+                          <Download className="h-3 w-3 mr-1" />
+                          下载
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -324,10 +394,15 @@ function ResultContent() {
               variant="outline"
               size="sm"
               className="w-full justify-start border-[#e5e5e5] text-[#666] hover:text-[#1d1d1f] hover:border-[#ccc] rounded-xl cursor-pointer"
-              onClick={() => router.push("/workspace/create")}
+              onClick={handleRegenerate}
+              disabled={isRegenerating}
             >
-              <RefreshCw className="h-3.5 w-3.5 mr-2" />
-              重新生成
+              {isRegenerating ? (
+                <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3.5 w-3.5 mr-2" />
+              )}
+              {isRegenerating ? "重新生成中..." : "重新生成"}
             </Button>
             <Button
               variant="outline"
